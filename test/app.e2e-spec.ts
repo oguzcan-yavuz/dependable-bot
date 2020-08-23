@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 
@@ -12,13 +12,43 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  afterEach(() => {
+    app.close();
+  });
+
+  it('/subscriptions (POST) - invalid repositoryUrl', () => {
     return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+      .post('/subscriptions')
+      .send({
+        repositoryUrl: 'invalid-url',
+        emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+      })
+      .expect(400);
+  });
+
+  it('/subscriptions (POST) - invalid emails', () => {
+    return request(app.getHttpServer())
+      .post('/subscriptions')
+      .send({
+        repositoryUrl:
+          'https://github.com/oguzcan-yavuz/nestjs-task-management',
+        emails: ['oguzcanyavuz321@gmail.com', 'invalid-email'],
+      })
+      .expect(400);
+  });
+
+  it('/subscriptions (POST) - success', () => {
+    return request(app.getHttpServer())
+      .post('/subscriptions')
+      .send({
+        repositoryUrl:
+          'https://github.com/oguzcan-yavuz/nestjs-task-management',
+        emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+      })
+      .expect(201);
   });
 });

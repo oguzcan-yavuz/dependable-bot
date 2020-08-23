@@ -8,23 +8,31 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "prettier": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --max-warnings=0 --fix",
+    "format": "npm run lint && npm run prettier",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "cm": "npx git-cz"
+    "cm": "npx git-cz",
+    "docker": "docker-compose --project-name dependable-bot",
+    "docker:up": "npm run docker -- up",
+    "docker:down": "npm run docker -- down"
   },
   "dependencies": {
     "@nestjs/common": "^7.0.0",
     "@nestjs/core": "^7.0.0",
+    "@nestjs/mongoose": "^7.0.2",
     "@nestjs/platform-express": "^7.0.0",
+    "class-transformer": "^0.3.1",
+    "class-validator": "^0.12.2",
+    "mongoose": "^5.10.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.5.4"
@@ -35,6 +43,7 @@
     "@nestjs/testing": "^7.0.0",
     "@types/express": "^4.17.3",
     "@types/jest": "25.2.3",
+    "@types/mongoose": "^5.7.36",
     "@types/node": "^13.9.1",
     "@types/supertest": "^2.0.8",
     "@typescript-eslint/eslint-plugin": "3.0.2",
@@ -74,12 +83,11 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && npm run test",
-      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
+      "pre-commit": "lint-staged && npm run test"
     }
   },
   "lint-staged": {
-    "{src,apps,libs,test}/**/*.ts": "prettier --write"
+    "{src,apps,libs,test}/**/*.ts": "npm run format"
   },
   "config": {
     "commitizen": {
