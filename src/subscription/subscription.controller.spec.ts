@@ -4,6 +4,7 @@ import { SubscriptionService } from './subscription.service';
 import { Subscription } from './schema/subscription.schema';
 import { getModelToken } from '@nestjs/mongoose';
 import { SubscriptionRepository } from './subscription.repository';
+import { RemoteService } from '../remote/remote.service';
 
 describe('Subscription Controller', () => {
   let controller: SubscriptionController;
@@ -23,6 +24,7 @@ describe('Subscription Controller', () => {
           provide: getModelToken(Subscription.name),
           useValue: mockSubscriptionModel,
         },
+        RemoteService,
       ],
     }).compile();
 

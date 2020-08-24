@@ -4,6 +4,7 @@ import { SubscriptionService } from './subscription.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Subscription, SubscriptionSchema } from './schema/subscription.schema';
 import { SubscriptionRepository } from './subscription.repository';
+import { RemoteService } from '../remote/remote.service';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { SubscriptionRepository } from './subscription.repository';
     ]),
   ],
   controllers: [SubscriptionController],
-  providers: [SubscriptionService, SubscriptionRepository],
+  providers: [SubscriptionService, SubscriptionRepository, RemoteService],
 })
 export class SubscriptionModule {}

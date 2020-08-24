@@ -41,6 +41,17 @@ describe('AppController (e2e)', () => {
       .expect(400);
   });
 
+  it('/subscriptions (POST) - invalid remote repository provider', () => {
+    return request(app.getHttpServer())
+      .post('/subscriptions')
+      .send({
+        repositoryUrl:
+          'https://invalidgitrepo.com/oguzcan-yavuz/nestjs-task-management',
+        emails: ['oguzcanyavuz321@gmail.com', 'invalid-email'],
+      })
+      .expect(400);
+  });
+
   it('/subscriptions (POST) - success', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')
