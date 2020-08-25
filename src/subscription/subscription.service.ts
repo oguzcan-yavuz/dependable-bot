@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionRepository } from './subscription.repository';
-import { OutdatedDependency, SubscriptionEntity } from './subscription.types';
+import { SubscriptionEntity } from './subscription.types';
 import { RemoteService } from '../remote/remote.service';
+import { Dependency } from '../remote/remote.types';
 
 @Injectable()
 export class SubscriptionService {
@@ -14,15 +15,8 @@ export class SubscriptionService {
   async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
   ): Promise<SubscriptionEntity> {
-    const remoteRepositoryProvider = this.remoteService.getRemoteRepositoryProvider(
-      createSubscriptionDto.repositoryUrl,
-    );
-    const subscriptionBody = {
-      ...createSubscriptionDto,
-      remoteRepositoryProvider,
-    };
     const subscription = await this.subscriptionRepository.create(
-      subscriptionBody,
+      createSubscriptionDto,
     );
 
     return subscription;
@@ -30,9 +24,13 @@ export class SubscriptionService {
 
   async getOutdatedDependencies(
     subscriptionId: SubscriptionEntity['_id'],
-  ): Promise<OutdatedDependency[]> {
+  ): Promise<Dependency[]> {
     const subscription = await this.subscriptionRepository.getById(
       subscriptionId,
+    );
+
+    const dependencies = await this.remoteService.getDependencies(
+      subscription.repositoryUrl,
     );
 
     return [];

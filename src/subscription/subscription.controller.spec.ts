@@ -5,13 +5,14 @@ import { Subscription } from './schema/subscription.schema';
 import { getModelToken } from '@nestjs/mongoose';
 import { SubscriptionRepository } from './subscription.repository';
 import { RemoteService } from '../remote/remote.service';
+import { ContextIdFactory } from '@nestjs/core';
 
 describe('Subscription Controller', () => {
   let controller: SubscriptionController;
   let service: SubscriptionService;
 
   beforeEach(async () => {
-    const mockSubscriptionModel = {
+    const mockedSubscriptionModel = {
       create: jest.fn(),
     };
 
@@ -22,24 +23,39 @@ describe('Subscription Controller', () => {
         SubscriptionRepository,
         {
           provide: getModelToken(Subscription.name),
-          useValue: mockSubscriptionModel,
+          useValue: mockedSubscriptionModel,
         },
         RemoteService,
+        {
+          provide: 'REMOTE_ADAPTER',
+          useValue: {},
+        },
       ],
     }).compile();
 
-    controller = module.get<SubscriptionController>(SubscriptionController);
-    service = module.get<SubscriptionService>(SubscriptionService);
+    const contextId = ContextIdFactory.create();
+    jest
+      .spyOn(ContextIdFactory, 'getByRequest')
+      .mockImplementation(() => contextId);
+
+    controller = await module.resolve<SubscriptionController>(
+      SubscriptionController,
+      contextId,
+    );
+    service = await module.resolve<SubscriptionService>(
+      SubscriptionService,
+      contextId,
+    );
   });
 
-  it('should create subscription', () => {
+  it('should create subscription', async () => {
     const dto = {
       repositoryUrl: 'https://github.com/oguzcan-yavuz/nestjs-task-management',
       emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
     };
     const spy = jest.spyOn(service, 'createSubscription');
 
-    controller.createSubscription(dto);
+    await controller.createSubscription(dto);
 
     expect(spy).toHaveBeenCalledWith(dto);
   });

@@ -20,9 +20,11 @@ describe('AppController (e2e)', () => {
     app.close();
   });
 
+  // TODO: add Remote-Provider header
   it('/subscriptions (POST) - invalid repositoryUrl', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')
+      .set('Remote-Provider', 'github')
       .send({
         repositoryUrl: 'invalid-url',
         emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
@@ -33,6 +35,7 @@ describe('AppController (e2e)', () => {
   it('/subscriptions (POST) - invalid emails', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')
+      .set('Remote-Provider', 'github')
       .send({
         repositoryUrl:
           'https://github.com/oguzcan-yavuz/nestjs-task-management',
@@ -44,6 +47,7 @@ describe('AppController (e2e)', () => {
   it('/subscriptions (POST) - invalid remote repository provider', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')
+      .set('Remote-Provider', 'github')
       .send({
         repositoryUrl:
           'https://invalidgitrepo.com/oguzcan-yavuz/nestjs-task-management',
@@ -55,6 +59,7 @@ describe('AppController (e2e)', () => {
   it('/subscriptions (POST) - success', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')
+      .set('Remote-Provider', 'github')
       .send({
         repositoryUrl:
           'https://github.com/oguzcan-yavuz/nestjs-task-management',

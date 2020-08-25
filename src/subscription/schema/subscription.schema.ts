@@ -8,9 +8,6 @@ export class Subscription extends Document {
 
   @Prop()
   emails: string[];
-
-  @Prop()
-  remoteRepositoryProvider: string;
 }
 
 export const SubscriptionSchema = SchemaFactory.createForClass(Subscription);

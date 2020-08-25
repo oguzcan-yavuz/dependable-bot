@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Subscription } from './schema/subscription.schema';
 import { Model } from 'mongoose';
-import { SubscriptionEntity, SubscriptionBody } from './subscription.types';
+import { SubscriptionEntity } from './subscription.types';
+import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 
 @Injectable()
 export class SubscriptionRepository {
@@ -12,9 +13,11 @@ export class SubscriptionRepository {
   ) {}
 
   async create(
-    subscriptionBody: SubscriptionBody,
+    createSubscriptionDto: CreateSubscriptionDto,
   ): Promise<SubscriptionEntity> {
-    const subscription = await this.subscriptionModel.create(subscriptionBody);
+    const subscription = await this.subscriptionModel.create(
+      createSubscriptionDto,
+    );
 
     return subscription as SubscriptionEntity;
   }
