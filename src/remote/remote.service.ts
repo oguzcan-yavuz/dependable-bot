@@ -1,5 +1,5 @@
 import { Injectable, Scope, Inject } from '@nestjs/common';
-import { Dependency, RemoteAdapter } from './remote.types';
+import { RemoteAdapter, DependencyMap } from './remote.types';
 
 @Injectable({
   scope: Scope.REQUEST,
@@ -10,7 +10,7 @@ export class RemoteService {
     private adapter: RemoteAdapter,
   ) {}
 
-  getDependencies(repositoryUrl: string): Promise<Dependency[]> {
+  getDependencies(repositoryUrl: string): Promise<DependencyMap> {
     return this.adapter.getDependencies(repositoryUrl);
   }
 }

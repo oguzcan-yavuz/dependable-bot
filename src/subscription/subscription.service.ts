@@ -3,7 +3,7 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionRepository } from './subscription.repository';
 import { SubscriptionEntity } from './subscription.types';
 import { RemoteService } from '../remote/remote.service';
-import { Dependency } from '../remote/remote.types';
+import { DependencyMap } from '../remote/remote.types';
 
 @Injectable()
 export class SubscriptionService {
@@ -24,7 +24,7 @@ export class SubscriptionService {
 
   async getOutdatedDependencies(
     subscriptionId: SubscriptionEntity['_id'],
-  ): Promise<Dependency[]> {
+  ): Promise<DependencyMap> {
     const subscription = await this.subscriptionRepository.getById(
       subscriptionId,
     );
@@ -33,6 +33,6 @@ export class SubscriptionService {
       subscription.repositoryUrl,
     );
 
-    return [];
+    return new Map();
   }
 }

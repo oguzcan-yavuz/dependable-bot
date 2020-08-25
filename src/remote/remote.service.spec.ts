@@ -32,9 +32,7 @@ describe('RemoteService', () => {
     it('should get dependencies for github provider', async () => {
       const repositoryUrl =
         'https://github.com/oguzcan-yavuz/nestjs-task-management';
-      const expectedDependencies = [
-        { name: 'mocked-github', version: '1.4.3' },
-      ];
+      const expectedDependencies = new Map([['mocked-github', '1.2.3']]);
 
       when(mockedGithubAdapter.getDependencies(anyString())).thenResolve(
         expectedDependencies,
@@ -74,9 +72,7 @@ describe('RemoteService', () => {
     it('should get dependencies for gitlab provider', async () => {
       const repositoryUrl =
         'https://gitlab.com/oguzcan-yavuz/nestjs-task-management';
-      const expectedDependencies = [
-        { name: 'mocked-gitlab', version: '2.8.7' },
-      ];
+      const expectedDependencies = new Map([['mocked-gitlab', '5.4.1']]);
 
       when(mockedGitlabAdapter.getDependencies(anyString())).thenResolve(
         expectedDependencies,
