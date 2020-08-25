@@ -1,16 +1,10 @@
-import { ValueOf } from '../app.types';
-
-export const PackageManager = {
-  NpmOrYarn: 'npmOrYarn',
-  Composer: 'composer',
+export type Dependency = {
+  name: string;
+  version: string;
 };
 
-export const RemoteRepositoryProvider = {
-  Github: 'github.com',
-};
+export interface RemoteAdapter {
+  getDependencies(repositoryUrl: string): Promise<Dependency[]>;
+}
 
-export type ValueOfRemoteRepositoryProvider = ValueOf<
-  typeof RemoteRepositoryProvider
->;
-
-export type ValueOfPackageManager = ValueOf<typeof PackageManager>;
+export type RemoteProviderToAdapterMap = Record<string, RemoteAdapter>;
