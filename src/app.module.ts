@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RemoteModule } from './remote/remote.module';
 import { NestEmitterModule } from 'nest-emitter';
 import { EventEmitter } from 'events';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { EventEmitter } from 'events';
     NestEmitterModule.forRoot(new EventEmitter()),
     SubscriptionModule,
     RemoteModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

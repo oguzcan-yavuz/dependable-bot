@@ -19,6 +19,9 @@ export class SubscriptionService implements OnModuleInit {
     this.emitter.on('newSubscription', msg =>
       this.checkOutdatedDependencies(msg),
     );
+    this.emitter.on('checkOutdatedDependencies', msg =>
+      this.checkOutdatedDependencies(msg),
+    );
   }
   async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
@@ -29,6 +32,12 @@ export class SubscriptionService implements OnModuleInit {
     this.emitter.emit('newSubscription', subscription._id);
 
     return subscription;
+  }
+
+  getSubscription(
+    subscriptionId: SubscriptionEntity['_id'],
+  ): Promise<SubscriptionEntity> {
+    return this.subscriptionRepository.getById(subscriptionId);
   }
 
   async checkOutdatedDependencies(
@@ -43,11 +52,14 @@ export class SubscriptionService implements OnModuleInit {
     );
 
     if (outdatedDependencies.length > 0) {
-      this.emitter.emit('newOutdatedDependencies', outdatedDependencies);
+      this.emitter.emit('newOutdatedDependencies', {
+        subscriptionId,
+        outdatedDependencies,
+      });
     }
 
     setTimeout(() => {
-      this.emitter.emit('checkOutdatedDependencies');
+      this.emitter.emit('checkOutdatedDependencies', subscription._id);
     }, ms('1 day'));
 
     return outdatedDependencies;

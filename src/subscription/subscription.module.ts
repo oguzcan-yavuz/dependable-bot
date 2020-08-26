@@ -22,5 +22,6 @@ import { RegistryAdapterFactory } from '../remote/registry.provider';
     remoteAdapterFactory,
     RegistryAdapterFactory,
   ],
+  exports: [SubscriptionService],
 })
 export class SubscriptionModule {}

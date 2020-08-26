@@ -86,6 +86,12 @@ describe('SubscriptionService', () => {
     expect(subscription).toEqual(mockedSubscription);
   });
 
+  it('should get subscription', async () => {
+    const subscription = await service.getSubscription(mockedSubscription._id);
+
+    expect(subscription).toEqual(mockedSubscription);
+  });
+
   it('should listen newSubscription event', async () => {
     const dto = {
       repositoryUrl: mockedSubscription.repositoryUrl,
@@ -132,10 +138,10 @@ describe('SubscriptionService', () => {
         mockedSubscription.repositoryUrl,
       ),
     ).times(1);
-    expect(emitterSpy).toHaveBeenCalledWith(
-      'newOutdatedDependencies',
+    expect(emitterSpy).toHaveBeenCalledWith('newOutdatedDependencies', {
+      subscriptionId: mockedSubscription._id,
       outdatedDependencies,
-    );
+    });
     expect(outdatedDependencies).toEqual(expectedOutdatedDependencies);
   });
 });
