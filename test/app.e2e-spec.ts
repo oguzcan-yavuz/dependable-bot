@@ -20,7 +20,6 @@ describe('AppController (e2e)', () => {
     app.close();
   });
 
-  // TODO: add Remote-Provider header
   it('/subscriptions (POST) - invalid repositoryUrl', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')

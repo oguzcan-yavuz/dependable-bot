@@ -6,6 +6,7 @@ import { RemoteService } from '../remote/remote.service';
 import { InjectEventEmitter } from 'nest-emitter';
 import { SubscriptionEventEmitter } from './subscription.events';
 import * as ms from 'ms';
+import { OutdatedDependency } from '../remote/remote.types';
 
 @Injectable()
 export class SubscriptionService implements OnModuleInit {
@@ -32,7 +33,7 @@ export class SubscriptionService implements OnModuleInit {
 
   async checkOutdatedDependencies(
     subscriptionId: SubscriptionEntity['_id'],
-  ): Promise<void> {
+  ): Promise<OutdatedDependency[]> {
     const subscription = await this.subscriptionRepository.getById(
       subscriptionId,
     );
@@ -48,5 +49,7 @@ export class SubscriptionService implements OnModuleInit {
     setTimeout(() => {
       this.emitter.emit('checkOutdatedDependencies');
     }, ms('1 day'));
+
+    return outdatedDependencies;
   }
 }

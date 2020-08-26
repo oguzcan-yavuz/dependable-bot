@@ -1,16 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RemoteService } from './remote.service';
 import { mock, instance, when, anyString, verify, reset } from 'ts-mockito';
-import { GitlabAdapter } from './adapters/gitlab.adapter';
-import { GithubAdapter } from './adapters/github.adapter';
+import { GithubAdapter } from './adapters/remote/github.adapter';
+import {
+  DependencyManager,
+  OutdatedDependency,
+  DependenciesAndDependencyManager,
+} from './remote.types';
+import { RegistryAdapterFactory } from './registry.provider';
+import { NpmOrYarnAdapter } from './adapters/registry/npm-or-yarn.adapter';
+import { ComposerAdapter } from './adapters/registry/composer.adapter';
 
 describe('RemoteService', () => {
   describe('with GithubAdapter', () => {
     let service: RemoteService;
     let mockedGithubAdapter: GithubAdapter;
+    let mockedRegistryAdapterFactory: RegistryAdapterFactory;
+    let mockedNpmOrYarnAdapter: NpmOrYarnAdapter;
+    let mockedComposerAdapter: ComposerAdapter;
 
     beforeEach(async () => {
       mockedGithubAdapter = mock(GithubAdapter);
+      mockedRegistryAdapterFactory = mock(RegistryAdapterFactory);
+      mockedNpmOrYarnAdapter = mock(NpmOrYarnAdapter);
+      mockedComposerAdapter = mock(ComposerAdapter);
+
+      when(
+        mockedRegistryAdapterFactory.getAdapter(DependencyManager.NpmOrYarn),
+      ).thenReturn(instance(mockedNpmOrYarnAdapter));
+      when(
+        mockedRegistryAdapterFactory.getAdapter(DependencyManager.Composer),
+      ).thenReturn(instance(mockedComposerAdapter));
 
       const module: TestingModule = await Test.createTestingModule({
         providers: [
@@ -19,69 +39,61 @@ describe('RemoteService', () => {
             provide: 'REMOTE_ADAPTER',
             useValue: instance(mockedGithubAdapter),
           },
+          RegistryAdapterFactory,
         ],
-      }).compile();
+      })
+        .overrideProvider(RegistryAdapterFactory)
+        .useValue(instance(mockedRegistryAdapterFactory))
+        .compile();
 
       service = await module.resolve<RemoteService>(RemoteService);
     });
 
     afterEach(() => {
       reset(mockedGithubAdapter);
+      reset(mockedRegistryAdapterFactory);
+      reset(mockedNpmOrYarnAdapter);
+      reset(mockedComposerAdapter);
     });
 
-    it('should get dependencies for github provider', async () => {
+    it('should get outdated dependencies', async () => {
       const repositoryUrl =
         'https://github.com/oguzcan-yavuz/nestjs-task-management';
-      const expectedDependencies = new Map([['mocked-github', '1.2.3']]);
-
-      when(mockedGithubAdapter.getDependencies(anyString())).thenResolve(
-        expectedDependencies,
-      );
-
-      const dependencies = await service.getDependencies(repositoryUrl);
-
-      verify(mockedGithubAdapter.getDependencies(anyString())).times(1);
-      expect(dependencies).toEqual(expectedDependencies);
-    });
-  });
-
-  describe('with GitlabAdapter', () => {
-    let service: RemoteService;
-    let mockedGitlabAdapter: GitlabAdapter;
-
-    beforeEach(async () => {
-      mockedGitlabAdapter = mock(GitlabAdapter);
-
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          RemoteService,
-          {
-            provide: 'REMOTE_ADAPTER',
-            useValue: instance(mockedGitlabAdapter),
-          },
+      const expectedDependenciesAndDependencyManager: DependenciesAndDependencyManager = {
+        dependencies: [
+          { name: 'dependency-one', version: '1.2.3' },
+          { name: 'dependency-two', version: '3.4.7' },
+          { name: 'dependency-three', version: '9.9.9' },
         ],
-      }).compile();
+        dependencyManager: DependencyManager.NpmOrYarn,
+      };
+      const expectedOutdatedDependencies: OutdatedDependency[] = [
+        {
+          name: 'dependency-one',
+          version: '1.2.3',
+          latestVersion: '9.9.9',
+        },
+        {
+          name: 'dependency-two',
+          version: '3.4.7',
+          latestVersion: '9.9.9',
+        },
+      ];
 
-      service = await module.resolve<RemoteService>(RemoteService);
-    });
-
-    afterEach(() => {
-      reset(mockedGitlabAdapter);
-    });
-
-    it('should get dependencies for gitlab provider', async () => {
-      const repositoryUrl =
-        'https://gitlab.com/oguzcan-yavuz/nestjs-task-management';
-      const expectedDependencies = new Map([['mocked-gitlab', '5.4.1']]);
-
-      when(mockedGitlabAdapter.getDependencies(anyString())).thenResolve(
-        expectedDependencies,
+      when(
+        mockedGithubAdapter.getDependenciesAndDependencyManager(anyString()),
+      ).thenResolve(expectedDependenciesAndDependencyManager);
+      when(mockedNpmOrYarnAdapter.getLatestVersion(anyString())).thenResolve(
+        '9.9.9',
       );
 
-      const dependencies = await service.getDependencies(repositoryUrl);
+      const dependencies = await service.getOutdatedDependencies(repositoryUrl);
 
-      verify(mockedGitlabAdapter.getDependencies(anyString())).times(1);
-      expect(dependencies).toEqual(expectedDependencies);
+      verify(
+        mockedGithubAdapter.getDependenciesAndDependencyManager(anyString()),
+      ).times(1);
+      verify(mockedNpmOrYarnAdapter.getLatestVersion(anyString())).times(3);
+      expect(dependencies).toEqual(expectedOutdatedDependencies);
     });
   });
 });

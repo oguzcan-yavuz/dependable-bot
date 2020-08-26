@@ -1,5 +1,6 @@
 import { Injectable, Scope, Inject } from '@nestjs/common';
-import { RemoteAdapter, DependencyMap } from './remote.types';
+import { RemoteAdapter, OutdatedDependency } from './remote.types';
+import { RegistryAdapterFactory } from './registry.provider';
 
 @Injectable({
   scope: Scope.REQUEST,
@@ -7,10 +8,38 @@ import { RemoteAdapter, DependencyMap } from './remote.types';
 export class RemoteService {
   constructor(
     @Inject('REMOTE_ADAPTER')
-    private adapter: RemoteAdapter,
+    private remoteAdapter: RemoteAdapter,
+    private registryAdapterFactory: RegistryAdapterFactory,
   ) {}
 
-  getDependencies(repositoryUrl: string): Promise<DependencyMap> {
-    return this.adapter.getDependencies(repositoryUrl);
+  async getOutdatedDependencies(
+    repositoryUrl: string,
+  ): Promise<OutdatedDependency[]> {
+    const {
+      dependencies: currentDependencies,
+      dependencyManager,
+    } = await this.remoteAdapter.getDependenciesAndDependencyManager(
+      repositoryUrl,
+    );
+    const registryAdapter = this.registryAdapterFactory.getAdapter(
+      dependencyManager,
+    );
+    const latestVersions = await Promise.all(
+      currentDependencies.map(({ name }) =>
+        registryAdapter.getLatestVersion(name),
+      ),
+    );
+    const dependenciesWithBothVersions = currentDependencies.map(
+      (dependency, index) => ({
+        ...dependency,
+        latestVersion: latestVersions[index],
+      }),
+    );
+
+    const outdatedDependencies = dependenciesWithBothVersions.filter(
+      dependency => dependency.version !== dependency.latestVersion,
+    );
+
+    return outdatedDependencies;
   }
 }

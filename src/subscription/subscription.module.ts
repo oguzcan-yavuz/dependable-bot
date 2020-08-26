@@ -6,6 +6,7 @@ import { Subscription, SubscriptionSchema } from './schema/subscription.schema';
 import { SubscriptionRepository } from './subscription.repository';
 import { RemoteService } from '../remote/remote.service';
 import { remoteAdapterFactory } from '../remote/remote.provider';
+import { RegistryAdapterFactory } from '../remote/registry.provider';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { remoteAdapterFactory } from '../remote/remote.provider';
     SubscriptionRepository,
     RemoteService,
     remoteAdapterFactory,
+    RegistryAdapterFactory,
   ],
 })
 export class SubscriptionModule {}
