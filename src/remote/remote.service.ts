@@ -69,6 +69,22 @@ export class RemoteService {
     return dependencyManagerToFormatterMap[dependencyManager](contents);
   }
 
+  private async addLatestVersionToDependencies(
+    dependencies: Dependency[],
+    dependencyManager: DependencyManager,
+  ): Promise<OutdatedDependency[]> {
+    const registryAdapter = this.registryAdapterFactory.getAdapter(
+      dependencyManager,
+    );
+    const latestVersions = await Promise.all(
+      dependencies.map(({ name }) => registryAdapter.getLatestVersion(name)),
+    );
+    return dependencies.map((dependency, index) => ({
+      ...dependency,
+      latestVersion: latestVersions[index],
+    }));
+  }
+
   async getOutdatedDependencies(
     repositoryUrl: string,
   ): Promise<OutdatedDependency[]> {
@@ -84,19 +100,10 @@ export class RemoteService {
       repositoryUrl,
       packageFile,
     );
-    const dependencies = await this.formatContents(contents, dependencyManager);
-
-    const registryAdapter = this.registryAdapterFactory.getAdapter(
+    const dependencies = this.formatContents(contents, dependencyManager);
+    const dependenciesWithBothVersions = await this.addLatestVersionToDependencies(
+      dependencies,
       dependencyManager,
-    );
-    const latestVersions = await Promise.all(
-      dependencies.map(({ name }) => registryAdapter.getLatestVersion(name)),
-    );
-    const dependenciesWithBothVersions = dependencies.map(
-      (dependency, index) => ({
-        ...dependency,
-        latestVersion: latestVersions[index],
-      }),
     );
     const outdatedDependencies = dependenciesWithBothVersions.filter(
       dependency => dependency.version !== dependency.latestVersion,

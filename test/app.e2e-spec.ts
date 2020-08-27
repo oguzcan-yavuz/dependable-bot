@@ -99,7 +99,7 @@ describe('AppController (e2e)', () => {
     });
   });
 
-  describe.only('composer', () => {
+  describe('composer', () => {
     let subscriptionId: string;
     it('/subscriptions (POST) - success', () => {
       return request(app.getHttpServer())
