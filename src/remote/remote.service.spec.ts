@@ -80,17 +80,33 @@ describe('RemoteService', () => {
         },
       ];
 
+      when(mockedGithubAdapter.getFileNames(repositoryUrl)).thenResolve([
+        'index.js',
+        'package.json',
+        'package-lock.json',
+      ]);
       when(
-        mockedGithubAdapter.getDependenciesAndDependencyManager(anyString()),
-      ).thenResolve(expectedDependenciesAndDependencyManager);
+        mockedGithubAdapter.getFileContents(repositoryUrl, 'package.json'),
+      ).thenResolve(
+        JSON.stringify({
+          dependencies: {
+            'dependency-one': '^1.2.3',
+          },
+          devDependencies: {
+            'dependency-two': '~3.4.7',
+            'dependency-three': '9.9.9',
+          },
+        }),
+      );
       when(mockedNpmOrYarnAdapter.getLatestVersion(anyString())).thenResolve(
         '9.9.9',
       );
 
       const dependencies = await service.getOutdatedDependencies(repositoryUrl);
 
+      verify(mockedGithubAdapter.getFileNames(repositoryUrl)).times(1);
       verify(
-        mockedGithubAdapter.getDependenciesAndDependencyManager(anyString()),
+        mockedGithubAdapter.getFileContents(repositoryUrl, 'package.json'),
       ).times(1);
       verify(mockedNpmOrYarnAdapter.getLatestVersion(anyString())).times(3);
       expect(dependencies).toEqual(expectedOutdatedDependencies);

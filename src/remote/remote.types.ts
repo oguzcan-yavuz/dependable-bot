@@ -14,9 +14,8 @@ export type Dependency = {
 };
 
 export interface RemoteAdapter {
-  getDependenciesAndDependencyManager(
-    repositoryUrl: string,
-  ): Promise<DependenciesAndDependencyManager>;
+  getFileNames(repositoryUrl: string): Promise<string[]>;
+  getFileContents(repositoryUrl: string, fileName: string): Promise<string>;
 }
 
 export interface RegistryAdapter {
@@ -31,3 +30,8 @@ export type DependencyManagerToAdapterMap = Record<
   DependencyManager,
   RegistryAdapter
 >;
+
+export type DependencyManagerAndPackageFile = {
+  dependencyManager: DependencyManager | undefined;
+  packageFile: string | undefined;
+};

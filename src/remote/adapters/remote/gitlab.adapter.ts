@@ -1,16 +1,10 @@
-import {
-  RemoteAdapter,
-  DependenciesAndDependencyManager,
-  DependencyManager,
-} from '../../remote.types';
+import { RemoteAdapter } from '../../remote.types';
 
 export class GitlabAdapter implements RemoteAdapter {
-  async getDependenciesAndDependencyManager(
-    repositoryUrl: string,
-  ): Promise<DependenciesAndDependencyManager> {
-    return {
-      dependencies: [{ name: 'gitlab', version: '1.2.3' }],
-      dependencyManager: DependencyManager.NpmOrYarn,
-    };
+  getFileNames(repositoryUrl: string): Promise<string[]> {
+    throw new Error('Method not implemented.');
+  }
+  getFileContents(repositoryUrl: string, fileName: string): Promise<string> {
+    throw new Error('Method not implemented.');
   }
 }
