@@ -2,9 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { OutdatedDependency } from '../src/remote/remote.types';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
+  let subscriptionId: string;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -64,6 +66,34 @@ describe('AppController (e2e)', () => {
           'https://github.com/oguzcan-yavuz/nestjs-task-management',
         emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
       })
-      .expect(201);
+      .expect(201)
+      .then(response => {
+        expect(response.body).toHaveProperty('id');
+        subscriptionId = response.body.id;
+      });
+  });
+
+  it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
+    return request(app.getHttpServer())
+      .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
+      .set('Remote-Provider', 'github')
+      .expect(200)
+      .then(response => {
+        expect(response.body).toBeInstanceOf(Array);
+
+        const outdatedDependencies = response.body as OutdatedDependency[];
+
+        console.log('outdatedDeps:', outdatedDependencies);
+
+        outdatedDependencies.forEach(dependency => {
+          expect(dependency).toEqual(
+            expect.objectContaining({
+              name: expect.any(String),
+              version: expect.any(String),
+              latestVersion: expect.any(String),
+            }),
+          );
+        });
+      });
   });
 });

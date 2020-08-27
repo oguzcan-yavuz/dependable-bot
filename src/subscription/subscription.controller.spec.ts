@@ -65,13 +65,14 @@ describe('Subscription Controller', () => {
 
   it('should create subscription', async () => {
     const dto = {
-      repositoryUrl: 'https://github.com/oguzcan-yavuz/nestjs-task-management',
-      emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+      repositoryUrl: mockedSubscription.repositoryUrl,
+      emails: mockedSubscription.emails,
     };
     const spy = jest.spyOn(service, 'createSubscription');
 
-    await controller.createSubscription(dto);
+    const { id } = await controller.createSubscription(dto);
 
     expect(spy).toHaveBeenCalledWith(dto);
+    expect(id).toBe(mockedSubscription._id);
   });
 });

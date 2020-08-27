@@ -110,7 +110,7 @@ describe('SubscriptionService', () => {
   });
 
   it('should emit newOutdatedDependencies', async () => {
-    const expectedOutdatedDependencies: OutdatedDependency[] = [
+    const outdatedDependencies: OutdatedDependency[] = [
       {
         name: 'dependency-one',
         version: '1.2.3',
@@ -127,11 +127,9 @@ describe('SubscriptionService', () => {
       mockedRemoteService.getOutdatedDependencies(
         mockedSubscription.repositoryUrl,
       ),
-    ).thenResolve(expectedOutdatedDependencies);
+    ).thenResolve(outdatedDependencies);
 
-    const outdatedDependencies = await service.checkOutdatedDependencies(
-      mockedSubscription._id,
-    );
+    await service.checkOutdatedDependencies(mockedSubscription._id);
 
     verify(
       mockedRemoteService.getOutdatedDependencies(
@@ -142,6 +140,5 @@ describe('SubscriptionService', () => {
       subscriptionId: mockedSubscription._id,
       outdatedDependencies,
     });
-    expect(outdatedDependencies).toEqual(expectedOutdatedDependencies);
   });
 });

@@ -40,8 +40,8 @@ export class SubscriptionService implements OnModuleInit {
     return this.subscriptionRepository.getById(subscriptionId);
   }
 
-  async checkOutdatedDependencies(
-    subscriptionId: SubscriptionEntity['_id'],
+  async getOutdatedDependencies(
+    subscriptionId: string,
   ): Promise<OutdatedDependency[]> {
     const subscription = await this.subscriptionRepository.getById(
       subscriptionId,
@@ -51,6 +51,15 @@ export class SubscriptionService implements OnModuleInit {
       subscription.repositoryUrl,
     );
 
+    return outdatedDependencies;
+  }
+
+  async checkOutdatedDependencies(
+    subscriptionId: SubscriptionEntity['_id'],
+  ): Promise<void> {
+    const outdatedDependencies = await this.getOutdatedDependencies(
+      subscriptionId,
+    );
     if (outdatedDependencies.length > 0) {
       this.emitter.emit('newOutdatedDependencies', {
         subscriptionId,
@@ -59,9 +68,7 @@ export class SubscriptionService implements OnModuleInit {
     }
 
     setTimeout(() => {
-      this.emitter.emit('checkOutdatedDependencies', subscription._id);
+      this.emitter.emit('checkOutdatedDependencies', subscriptionId);
     }, ms('1 day'));
-
-    return outdatedDependencies;
   }
 }

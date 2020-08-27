@@ -1,6 +1,7 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { SubscriptionService } from './subscription.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { OutdatedDependency } from '../remote/remote.types';
 
 @Controller('subscriptions')
 export class SubscriptionController {
@@ -9,7 +10,18 @@ export class SubscriptionController {
   @Post()
   async createSubscription(
     @Body() createSubscriptionDto: CreateSubscriptionDto,
-  ): Promise<void> {
-    await this.subscriptionService.createSubscription(createSubscriptionDto);
+  ): Promise<{ id: string }> {
+    const { _id: id } = await this.subscriptionService.createSubscription(
+      createSubscriptionDto,
+    );
+
+    return { id };
+  }
+
+  @Get(':subscriptionId/outdated-dependencies')
+  getOutdatedDependencies(
+    @Param('subscriptionId') subscriptionId: string,
+  ): Promise<OutdatedDependency[]> {
+    return this.subscriptionService.getOutdatedDependencies(subscriptionId);
   }
 }
