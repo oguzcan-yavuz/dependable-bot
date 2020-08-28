@@ -1,4 +1,6 @@
-import { RegistryAdapter } from '../../remote.types';
+import { Dependency } from '../../remote.types';
+import { mapToDependency } from '../../remote.util';
+import { RegistryAdapter } from './registry-adapter.interface';
 import axios from 'axios';
 
 export class ComposerAdapter implements RegistryAdapter {
@@ -32,5 +34,13 @@ export class ComposerAdapter implements RegistryAdapter {
     const [latestVersion] = this.sortVersions(Object.keys(versions)).slice(-1);
 
     return latestVersion;
+  }
+
+  formatContents(contents: string): Dependency[] {
+    const composerJson = JSON.parse(contents);
+    const require = mapToDependency(composerJson.require);
+    const requireDev = mapToDependency(composerJson['require-dev']);
+
+    return [...require, ...requireDev];
   }
 }

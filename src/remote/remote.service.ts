@@ -33,41 +33,6 @@ export class RemoteService {
     return { packageFile, dependencyManager };
   }
 
-  private mapToDependency(map: Record<string, string>): Dependency[] {
-    return Object.entries(map).map(([packageName, version]) => ({
-      name: packageName,
-      version: version.replace(/[^\d\.]/g, ''),
-    }));
-  }
-
-  private npmOrYarnFormatter(contents: string): Dependency[] {
-    const packageJson = JSON.parse(contents);
-    const dependencies = this.mapToDependency(packageJson.dependencies);
-    const devDependencies = this.mapToDependency(packageJson.devDependencies);
-
-    return [...dependencies, ...devDependencies];
-  }
-
-  private composerFormatter(contents: string): Dependency[] {
-    const composerJson = JSON.parse(contents);
-    const require = this.mapToDependency(composerJson.require);
-    const requireDev = this.mapToDependency(composerJson['require-dev']);
-
-    return [...require, ...requireDev];
-  }
-
-  private formatContents(
-    contents: string,
-    dependencyManager: DependencyManager,
-  ): Dependency[] {
-    const dependencyManagerToFormatterMap = {
-      [DependencyManager.NpmOrYarn]: args => this.npmOrYarnFormatter(args),
-      [DependencyManager.Composer]: args => this.composerFormatter(args),
-    };
-
-    return dependencyManagerToFormatterMap[dependencyManager](contents);
-  }
-
   private async addLatestVersionToDependencies(
     dependencies: Dependency[],
     dependencyManager: DependencyManager,
@@ -103,7 +68,10 @@ export class RemoteService {
       repositoryUrl,
       packageFile,
     );
-    const dependencies = this.formatContents(contents, dependencyManager);
+    const registryAdapter = this.registryAdapterFactory.getAdapter(
+      dependencyManager,
+    );
+    const dependencies = registryAdapter.formatContents(contents);
     const dependenciesWithBothVersions = await this.addLatestVersionToDependencies(
       dependencies,
       dependencyManager,

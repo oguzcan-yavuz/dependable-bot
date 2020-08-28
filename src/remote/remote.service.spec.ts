@@ -83,7 +83,7 @@ describe('RemoteService', () => {
     it('should get outdated dependencies', async () => {
       const repositoryUrl =
         'https://github.com/oguzcan-yavuz/nestjs-task-management';
-      const expectedOutdatedDependencies: OutdatedDependency[] = [
+      const outdatedDependencies: OutdatedDependency[] = [
         {
           name: 'dependency-one',
           version: '1.2.3',
@@ -94,7 +94,16 @@ describe('RemoteService', () => {
           version: '3.4.7',
           latestVersion: '9.9.9',
         },
+        {
+          name: 'dependency-three',
+          version: '9.9.9',
+          latestVersion: '9.9.9',
+        },
       ];
+      const expectedOutdatedDependencies: OutdatedDependency[] = outdatedDependencies.slice(
+        0,
+        2,
+      );
 
       when(mockedGithubAdapter.getFileNames(repositoryUrl)).thenResolve([
         'index.js',
@@ -116,6 +125,9 @@ describe('RemoteService', () => {
       );
       when(mockedNpmOrYarnAdapter.getLatestVersion(anyString())).thenResolve(
         '9.9.9',
+      );
+      when(mockedNpmOrYarnAdapter.formatContents(anyString())).thenReturn(
+        outdatedDependencies,
       );
 
       const dependencies = await service.getOutdatedDependencies(

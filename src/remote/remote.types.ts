@@ -1,3 +1,6 @@
+import { RegistryAdapter } from './adapters/registry/registry-adapter.interface';
+import { RemoteAdapter } from './adapters/remote/remote-adapter.interface';
+
 export enum DependencyManager {
   NpmOrYarn = 'npmOrYarn',
   Composer = 'composer',
@@ -17,15 +20,6 @@ export type Dependency = {
   name: string;
   version: string;
 };
-
-export interface RemoteAdapter {
-  getFileNames(repositoryUrl: string): Promise<string[]>;
-  getFileContents(repositoryUrl: string, fileName: string): Promise<string>;
-}
-
-export interface RegistryAdapter {
-  getLatestVersion(dependencyName: string): Promise<string>;
-}
 
 export type RemoteProviderToAdapterMap = Record<RemoteProvider, RemoteAdapter>;
 

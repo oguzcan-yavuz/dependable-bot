@@ -1,6 +1,6 @@
-import { RemoteAdapter } from '../../remote.types';
 import { Octokit } from '@octokit/rest';
 import { URL } from 'url';
+import { RemoteAdapter } from './remote-adapter.interface';
 
 const octokit = new Octokit({});
 

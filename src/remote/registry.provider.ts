@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import {
   DependencyManager,
-  RegistryAdapter,
   DependencyManagerToAdapterMap,
 } from './remote.types';
 import { NpmOrYarnAdapter } from './adapters/registry/npm-or-yarn.adapter';
 import { ComposerAdapter } from './adapters/registry/composer.adapter';
+import { RegistryAdapter } from './adapters/registry/registry-adapter.interface';
 
 @Injectable()
 export class RegistryAdapterFactory {

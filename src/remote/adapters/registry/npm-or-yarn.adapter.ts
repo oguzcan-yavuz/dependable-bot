@@ -1,4 +1,6 @@
-import { RegistryAdapter } from '../../remote.types';
+import { Dependency } from '../../remote.types';
+import { mapToDependency } from '../../remote.util';
+import { RegistryAdapter } from './registry-adapter.interface';
 import axios from 'axios';
 
 export class NpmOrYarnAdapter implements RegistryAdapter {
@@ -10,5 +12,13 @@ export class NpmOrYarnAdapter implements RegistryAdapter {
     } = await axios.get([this.baseUrl, dependencyName, 'latest'].join('/'));
 
     return version;
+  }
+
+  formatContents(contents: string): Dependency[] {
+    const packageJson = JSON.parse(contents);
+    const dependencies = mapToDependency(packageJson.dependencies);
+    const devDependencies = mapToDependency(packageJson.devDependencies);
+
+    return [...dependencies, ...devDependencies];
   }
 }

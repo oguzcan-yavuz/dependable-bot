@@ -1,11 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import {
-  RemoteProvider,
-  RemoteAdapter,
-  RemoteProviderToAdapterMap,
-} from './remote.types';
+import { RemoteProvider, RemoteProviderToAdapterMap } from './remote.types';
 import { GithubAdapter } from './adapters/remote/github.adapter';
 import { GitlabAdapter } from './adapters/remote/gitlab.adapter';
+import { RemoteAdapter } from './adapters/remote/remote-adapter.interface';
 
 @Injectable()
 export class RemoteAdapterFactory {
