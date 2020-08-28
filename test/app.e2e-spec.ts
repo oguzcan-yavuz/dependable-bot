@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { OutdatedDependency } from '../src/remote/remote.types';
+import { AllExceptionsFilter } from '../src/all-exceptions.filter';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -14,6 +15,7 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalFilters(new AllExceptionsFilter());
     await app.init();
   });
 
@@ -44,20 +46,9 @@ describe('AppController (e2e)', () => {
       .expect(400);
   });
 
-  it('/subscriptions (POST) - invalid remote repository provider', () => {
-    return request(app.getHttpServer())
-      .post('/subscriptions')
-      .set('Remote-Provider', 'github')
-      .send({
-        repositoryUrl:
-          'https://invalidgitrepo.com/oguzcan-yavuz/nestjs-task-management',
-        emails: ['oguzcanyavuz321@gmail.com', 'invalid-email'],
-      })
-      .expect(400);
-  });
-
   describe('npmOrYarn', () => {
     let subscriptionId: string;
+
     it('/subscriptions (POST) - success', () => {
       return request(app.getHttpServer())
         .post('/subscriptions')
@@ -74,6 +65,13 @@ describe('AppController (e2e)', () => {
         });
     });
 
+    it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - gitlab adapter not implemented`, () => {
+      return request(app.getHttpServer())
+        .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
+        .set('Remote-Provider', 'gitlab')
+        .expect(500);
+    });
+
     it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
       return request(app.getHttpServer())
         .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
@@ -83,8 +81,6 @@ describe('AppController (e2e)', () => {
           expect(response.body).toBeInstanceOf(Array);
 
           const outdatedDependencies = response.body as OutdatedDependency[];
-
-          console.log('outdatedDeps:', outdatedDependencies);
 
           outdatedDependencies.forEach(dependency => {
             expect(dependency).toEqual(
@@ -125,8 +121,6 @@ describe('AppController (e2e)', () => {
           expect(response.body).toBeInstanceOf(Array);
 
           const outdatedDependencies = response.body as OutdatedDependency[];
-
-          console.log('outdatedDeps:', outdatedDependencies);
 
           outdatedDependencies.forEach(dependency => {
             expect(dependency).toEqual(

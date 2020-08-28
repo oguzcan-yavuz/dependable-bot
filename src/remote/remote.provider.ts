@@ -12,7 +12,10 @@ const getRemoteAdapter = (
     github: new GithubAdapter(),
     gitlab: new GitlabAdapter(),
   };
-  const remoteAdapter = remoteProviderToAdapterMap[remoteProvider];
+  const lowerCaseRemoteProvider = remoteProvider
+    ? remoteProvider.toLowerCase()
+    : remoteProvider;
+  const remoteAdapter = remoteProviderToAdapterMap[lowerCaseRemoteProvider];
 
   return remoteAdapter ? remoteAdapter : new GithubAdapter();
 };
@@ -21,7 +24,7 @@ export const remoteAdapterFactory = {
   provide: 'REMOTE_ADAPTER',
   scope: Scope.REQUEST,
   useFactory: (req: Request) => {
-    const remoteProvider = req.get('Remote-Provider').toLowerCase();
+    const remoteProvider = req.get('Remote-Provider');
     const remoteAdapter = getRemoteAdapter(remoteProvider);
 
     return remoteAdapter;

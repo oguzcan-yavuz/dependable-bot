@@ -77,7 +77,9 @@ export class RemoteService {
       dependencyManager,
     );
     const latestVersions = await Promise.all(
-      dependencies.map(({ name }) => registryAdapter.getLatestVersion(name)),
+      dependencies.map(({ name, version }) =>
+        registryAdapter.getLatestVersion(name).catch(() => version),
+      ),
     );
     return dependencies.map((dependency, index) => ({
       ...dependency,
