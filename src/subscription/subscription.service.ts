@@ -6,8 +6,8 @@ import { RemoteService } from '../remote/remote.service';
 import { InjectEventEmitter } from 'nest-emitter';
 import { SubscriptionEventEmitter } from './subscription.events';
 import { OutdatedDependency, RemoteProvider } from '../remote/remote.types';
-import * as ms from 'ms';
 import InvalidRemoteProviderException from './exceptions/invalid-remote-provider.exception';
+import * as ms from 'ms';
 
 @Injectable()
 export class SubscriptionService implements OnModuleInit {
@@ -25,7 +25,7 @@ export class SubscriptionService implements OnModuleInit {
   getRemoteProvider(repositoryUrl: string): RemoteProvider | undefined {
     const hostnameToRemoteProviderMap = {
       'github.com': RemoteProvider.Github,
-      '': RemoteProvider.Gitlab,
+      'gitlab.com': RemoteProvider.Gitlab,
     };
     const { hostname } = new URL(repositoryUrl);
 

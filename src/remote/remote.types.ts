@@ -1,5 +1,3 @@
-import { CreateSubscriptionDto } from '../subscription/dto/create-subscription.dto';
-
 export enum DependencyManager {
   NpmOrYarn = 'npmOrYarn',
   Composer = 'composer',
@@ -41,8 +39,4 @@ export type DependencyManagerToAdapterMap = Record<
 export type DependencyManagerAndPackageFile = {
   dependencyManager: DependencyManager | undefined;
   packageFile: string | undefined;
-};
-
-export type SubscriptionBody = CreateSubscriptionDto & {
-  remoteProvider: RemoteProvider;
 };

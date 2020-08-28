@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Subscription } from './schema/subscription.schema';
 import { Model } from 'mongoose';
-import { SubscriptionEntity } from './subscription.types';
-import { SubscriptionBody } from '../remote/remote.types';
+import { SubscriptionEntity, SubscriptionBody } from './subscription.types';
 
 @Injectable()
 export class SubscriptionRepository {
