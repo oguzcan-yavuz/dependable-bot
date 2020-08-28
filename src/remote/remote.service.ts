@@ -7,6 +7,7 @@ import {
   Dependency,
 } from './remote.types';
 import { RegistryAdapterFactory } from './registry.provider';
+import InvalidDependencyManagerException from './exceptions/invalid-dependency-manager.exception';
 
 @Injectable({
   scope: Scope.REQUEST,
@@ -96,7 +97,7 @@ export class RemoteService {
       dependencyManager,
     } = this.getDependencyManagerAndPackageFile(fileNames);
     if (!packageFile || !dependencyManager) {
-      throw new Error(`Dependency manager is not supported!`);
+      throw new InvalidDependencyManagerException();
     }
     const contents = await this.remoteAdapter.getFileContents(
       repositoryUrl,

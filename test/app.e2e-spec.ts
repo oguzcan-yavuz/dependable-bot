@@ -46,92 +46,87 @@ describe('AppController (e2e)', () => {
       .expect(400);
   });
 
-  describe('npmOrYarn', () => {
-    let subscriptionId: string;
+  describe('Github repositories', () => {
+    describe('npmOrYarn', () => {
+      let subscriptionId: string;
 
-    it('/subscriptions (POST) - success', () => {
-      return request(app.getHttpServer())
-        .post('/subscriptions')
-        .set('Remote-Provider', 'github')
-        .send({
-          repositoryUrl:
-            'https://github.com/oguzcan-yavuz/nestjs-task-management',
-          emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
-        })
-        .expect(201)
-        .then(response => {
-          expect(response.body).toHaveProperty('id');
-          subscriptionId = response.body.id;
-        });
-    });
-
-    it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - gitlab adapter not implemented`, () => {
-      return request(app.getHttpServer())
-        .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
-        .set('Remote-Provider', 'gitlab')
-        .expect(500);
-    });
-
-    it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
-      return request(app.getHttpServer())
-        .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
-        .set('Remote-Provider', 'github')
-        .expect(200)
-        .then(response => {
-          expect(response.body).toBeInstanceOf(Array);
-
-          const outdatedDependencies = response.body as OutdatedDependency[];
-
-          outdatedDependencies.forEach(dependency => {
-            expect(dependency).toEqual(
-              expect.objectContaining({
-                name: expect.any(String),
-                version: expect.any(String),
-                latestVersion: expect.any(String),
-              }),
-            );
+      it('/subscriptions (POST) - success', () => {
+        return request(app.getHttpServer())
+          .post('/subscriptions')
+          .set('Remote-Provider', 'github')
+          .send({
+            repositoryUrl:
+              'https://github.com/oguzcan-yavuz/nestjs-task-management',
+            emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+          })
+          .expect(201)
+          .then(response => {
+            expect(response.body).toHaveProperty('id');
+            subscriptionId = response.body.id;
           });
-        });
-    });
-  });
+      });
 
-  describe('composer', () => {
-    let subscriptionId: string;
-    it('/subscriptions (POST) - success', () => {
-      return request(app.getHttpServer())
-        .post('/subscriptions')
-        .set('Remote-Provider', 'github')
-        .send({
-          repositoryUrl: 'https://github.com/symfony/symfony',
-          emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
-        })
-        .expect(201)
-        .then(response => {
-          expect(response.body).toHaveProperty('id');
-          subscriptionId = response.body.id;
-        });
-    });
+      it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
+        return request(app.getHttpServer())
+          .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
+          .set('Remote-Provider', 'github')
+          .expect(200)
+          .then(response => {
+            expect(response.body).toBeInstanceOf(Array);
 
-    it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
-      return request(app.getHttpServer())
-        .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
-        .set('Remote-Provider', 'github')
-        .expect(200)
-        .then(response => {
-          expect(response.body).toBeInstanceOf(Array);
+            const outdatedDependencies = response.body as OutdatedDependency[];
 
-          const outdatedDependencies = response.body as OutdatedDependency[];
-
-          outdatedDependencies.forEach(dependency => {
-            expect(dependency).toEqual(
-              expect.objectContaining({
-                name: expect.any(String),
-                version: expect.any(String),
-                latestVersion: expect.any(String),
-              }),
-            );
+            outdatedDependencies.forEach(dependency => {
+              expect(dependency).toEqual(
+                expect.objectContaining({
+                  name: expect.any(String),
+                  version: expect.any(String),
+                  latestVersion: expect.any(String),
+                }),
+              );
+            });
           });
-        });
+      });
+    });
+
+    describe('composer', () => {
+      let subscriptionId: string;
+      it('/subscriptions (POST) - success', () => {
+        return request(app.getHttpServer())
+          .post('/subscriptions')
+          .set('Remote-Provider', 'github')
+          .send({
+            repositoryUrl: 'https://github.com/symfony/symfony',
+            emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+          })
+          .expect(201)
+          .then(response => {
+            expect(response.body).toHaveProperty('id');
+            subscriptionId = response.body.id;
+          });
+      });
+
+      it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
+        return request(app.getHttpServer())
+          .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
+          .set('Remote-Provider', 'github')
+          .expect(200)
+          .then(response => {
+            expect(response.body).toBeInstanceOf(Array);
+
+            const outdatedDependencies = response.body as OutdatedDependency[];
+
+            outdatedDependencies.forEach(dependency => {
+              expect(dependency).toEqual(
+                expect.objectContaining({
+                  name: expect.any(String),
+                  version: expect.any(String),
+                  latestVersion: expect.any(String),
+                }),
+              );
+            });
+          });
+      });
     });
   });
 });

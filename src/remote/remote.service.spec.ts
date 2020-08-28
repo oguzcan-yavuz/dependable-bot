@@ -2,14 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RemoteService } from './remote.service';
 import { mock, instance, when, anyString, verify, reset } from 'ts-mockito';
 import { GithubAdapter } from './adapters/remote/github.adapter';
-import {
-  DependencyManager,
-  OutdatedDependency,
-  DependenciesAndDependencyManager,
-} from './remote.types';
+import { DependencyManager, OutdatedDependency } from './remote.types';
 import { RegistryAdapterFactory } from './registry.provider';
 import { NpmOrYarnAdapter } from './adapters/registry/npm-or-yarn.adapter';
 import { ComposerAdapter } from './adapters/registry/composer.adapter';
+import InvalidDependencyManagerException from './exceptions/invalid-dependency-manager.exception';
 
 describe('RemoteService', () => {
   describe('with GithubAdapter', () => {
@@ -56,17 +53,19 @@ describe('RemoteService', () => {
       reset(mockedComposerAdapter);
     });
 
+    it('should throw InvalidDependencyManagerException', async () => {
+      const repositoryUrl =
+        'https://github.com/oguzcan-yavuz/nestjs-task-management';
+      when(mockedGithubAdapter.getFileNames(repositoryUrl)).thenResolve([]);
+
+      expect(
+        async () => await service.getOutdatedDependencies(repositoryUrl),
+      ).rejects.toThrow(InvalidDependencyManagerException);
+    });
+
     it('should get outdated dependencies', async () => {
       const repositoryUrl =
         'https://github.com/oguzcan-yavuz/nestjs-task-management';
-      const expectedDependenciesAndDependencyManager: DependenciesAndDependencyManager = {
-        dependencies: [
-          { name: 'dependency-one', version: '1.2.3' },
-          { name: 'dependency-two', version: '3.4.7' },
-          { name: 'dependency-three', version: '9.9.9' },
-        ],
-        dependencyManager: DependencyManager.NpmOrYarn,
-      };
       const expectedOutdatedDependencies: OutdatedDependency[] = [
         {
           name: 'dependency-one',
