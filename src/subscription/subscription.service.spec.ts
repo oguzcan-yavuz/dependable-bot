@@ -10,7 +10,9 @@ import { EventEmitter } from 'events';
 import { NestEmitterModule } from 'nest-emitter';
 import { RegistryAdapterFactory } from '../remote/registry.provider';
 import { mock, instance, when, anyString, reset, verify } from 'ts-mockito';
-import { OutdatedDependency } from '../remote/remote.types';
+import { OutdatedDependency, RemoteProvider } from '../remote/remote.types';
+import InvalidRemoteProviderException from './exceptions/invalid-remote-provider.exception';
+import { RemoteAdapterFactory } from '../remote/remote.provider';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
@@ -25,6 +27,7 @@ describe('SubscriptionService', () => {
       _id: '507f1f77bcf86cd799439011',
       repositoryUrl: 'https://github.com/oguzcan-yavuz/nestjs-task-management',
       emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+      remoteProvider: RemoteProvider.Github,
     };
     mockedSubscriptionModel = {
       create: jest.fn().mockResolvedValue(mockedSubscription),
@@ -34,9 +37,9 @@ describe('SubscriptionService', () => {
     };
     mockedRemoteService = mock(RemoteService);
 
-    when(mockedRemoteService.getOutdatedDependencies(anyString())).thenResolve(
-      [],
-    );
+    when(
+      mockedRemoteService.getOutdatedDependencies(anyString(), anyString()),
+    ).thenResolve([]);
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [NestEmitterModule.forRoot(new EventEmitter())],
@@ -48,10 +51,7 @@ describe('SubscriptionService', () => {
           useValue: mockedSubscriptionModel,
         },
         RemoteService,
-        {
-          provide: 'REMOTE_ADAPTER',
-          useValue: {},
-        },
+        RemoteAdapterFactory,
         RegistryAdapterFactory,
       ],
     })
@@ -69,20 +69,34 @@ describe('SubscriptionService', () => {
     reset(mockedRemoteService);
   });
 
+  it('should throw InvalidRemoteProviderException', () => {
+    const dto = {
+      repositoryUrl: 'https://invalidremote.com/some/repo',
+      emails: mockedSubscription.emails,
+    };
+
+    expect(async () => await service.createSubscription(dto)).rejects.toThrow(
+      InvalidRemoteProviderException,
+    );
+  });
+
   it('should create subscription', async () => {
     const dto = {
       repositoryUrl: mockedSubscription.repositoryUrl,
       emails: mockedSubscription.emails,
     };
     const repositorySpy = jest.spyOn(repository, 'create');
-    const emitterSpy = jest.spyOn(eventEmitter, 'emit');
+    const checkOutdatedDependenciesSpy = jest.spyOn(
+      service,
+      'checkOutdatedDependencies',
+    );
     const subscription = await service.createSubscription(dto);
 
-    expect(repositorySpy).toHaveBeenCalledWith(dto);
-    expect(emitterSpy).toHaveBeenCalledWith(
-      'newSubscription',
-      subscription._id,
-    );
+    expect(repositorySpy).toHaveBeenCalledWith({
+      ...dto,
+      remoteProvider: RemoteProvider.Github,
+    });
+    expect(checkOutdatedDependenciesSpy).toHaveBeenCalledWith(subscription._id);
     expect(subscription).toEqual(mockedSubscription);
   });
 
@@ -90,23 +104,6 @@ describe('SubscriptionService', () => {
     const subscription = await service.getSubscription(mockedSubscription._id);
 
     expect(subscription).toEqual(mockedSubscription);
-  });
-
-  it('should listen newSubscription event', async () => {
-    const dto = {
-      repositoryUrl: mockedSubscription.repositoryUrl,
-      emails: mockedSubscription.emails,
-    };
-
-    const emitterSpy = jest.spyOn(eventEmitter, 'emit');
-    const listenerSpy = jest.spyOn(service, 'checkOutdatedDependencies');
-    const subscription = await service.createSubscription(dto);
-
-    expect(emitterSpy).toHaveBeenCalledWith(
-      'newSubscription',
-      subscription._id,
-    );
-    expect(listenerSpy).toHaveBeenCalledWith(subscription._id);
   });
 
   it('should check outdated dependencies', async () => {
@@ -129,6 +126,7 @@ describe('SubscriptionService', () => {
     when(
       mockedRemoteService.getOutdatedDependencies(
         mockedSubscription.repositoryUrl,
+        RemoteProvider.Github,
       ),
     ).thenResolve(outdatedDependencies);
 
@@ -137,6 +135,7 @@ describe('SubscriptionService', () => {
     verify(
       mockedRemoteService.getOutdatedDependencies(
         mockedSubscription.repositoryUrl,
+        RemoteProvider.Github,
       ),
     ).times(1);
     expect(reportOutdatedDependenciesSpy).toHaveBeenCalledWith(

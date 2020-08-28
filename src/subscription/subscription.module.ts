@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Subscription, SubscriptionSchema } from './schema/subscription.schema';
 import { SubscriptionRepository } from './subscription.repository';
 import { RemoteService } from '../remote/remote.service';
-import { remoteAdapterFactory } from '../remote/remote.provider';
+import { RemoteAdapterFactory } from '../remote/remote.provider';
 import { RegistryAdapterFactory } from '../remote/registry.provider';
 
 @Module({
@@ -19,7 +19,7 @@ import { RegistryAdapterFactory } from '../remote/registry.provider';
     SubscriptionService,
     SubscriptionRepository,
     RemoteService,
-    remoteAdapterFactory,
+    RemoteAdapterFactory,
     RegistryAdapterFactory,
   ],
   exports: [SubscriptionService],

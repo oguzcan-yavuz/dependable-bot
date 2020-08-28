@@ -26,7 +26,6 @@ describe('AppController (e2e)', () => {
   it('/subscriptions (POST) - invalid repositoryUrl', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')
-      .set('Remote-Provider', 'github')
       .send({
         repositoryUrl: 'invalid-url',
         emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
@@ -37,7 +36,6 @@ describe('AppController (e2e)', () => {
   it('/subscriptions (POST) - invalid emails', () => {
     return request(app.getHttpServer())
       .post('/subscriptions')
-      .set('Remote-Provider', 'github')
       .send({
         repositoryUrl:
           'https://github.com/oguzcan-yavuz/nestjs-task-management',
@@ -53,7 +51,6 @@ describe('AppController (e2e)', () => {
       it('/subscriptions (POST) - success', () => {
         return request(app.getHttpServer())
           .post('/subscriptions')
-          .set('Remote-Provider', 'github')
           .send({
             repositoryUrl:
               'https://github.com/oguzcan-yavuz/nestjs-task-management',
@@ -69,7 +66,6 @@ describe('AppController (e2e)', () => {
       it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
         return request(app.getHttpServer())
           .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
-          .set('Remote-Provider', 'github')
           .expect(200)
           .then(response => {
             expect(response.body).toBeInstanceOf(Array);
@@ -94,7 +90,6 @@ describe('AppController (e2e)', () => {
       it('/subscriptions (POST) - success', () => {
         return request(app.getHttpServer())
           .post('/subscriptions')
-          .set('Remote-Provider', 'github')
           .send({
             repositoryUrl: 'https://github.com/symfony/symfony',
             emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
@@ -109,7 +104,6 @@ describe('AppController (e2e)', () => {
       it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
         return request(app.getHttpServer())
           .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
-          .set('Remote-Provider', 'github')
           .expect(200)
           .then(response => {
             expect(response.body).toBeInstanceOf(Array);

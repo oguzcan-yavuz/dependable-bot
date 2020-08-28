@@ -10,6 +10,8 @@ import { NestEmitterModule } from 'nest-emitter';
 import { EventEmitter } from 'events';
 import { SubscriptionEntity } from './subscription.types';
 import { RegistryAdapterFactory } from '../remote/registry.provider';
+import { RemoteProvider } from '../remote/remote.types';
+import { RemoteAdapterFactory } from '../remote/remote.provider';
 
 describe('Subscription Controller', () => {
   let controller: SubscriptionController;
@@ -21,9 +23,13 @@ describe('Subscription Controller', () => {
       _id: '507f1f77bcf86cd799439011',
       repositoryUrl: 'https://github.com/oguzcan-yavuz/nestjs-task-management',
       emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+      remoteProvider: RemoteProvider.Github,
     };
     const mockedSubscriptionModel = {
       create: jest.fn().mockResolvedValue(mockedSubscription),
+      findById: jest.fn().mockImplementation(() => ({
+        lean: jest.fn().mockResolvedValue(mockedSubscription),
+      })),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -37,13 +43,12 @@ describe('Subscription Controller', () => {
           useValue: mockedSubscriptionModel,
         },
         RemoteService,
-        {
-          provide: 'REMOTE_ADAPTER',
-          useValue: {},
-        },
+        RemoteAdapterFactory,
         RegistryAdapterFactory,
       ],
     })
+      .overrideProvider(RemoteAdapterFactory)
+      .useFactory({ factory: () => {} })
       .overrideProvider(RegistryAdapterFactory)
       .useFactory({ factory: () => {} })
       .compile();
@@ -69,6 +74,7 @@ describe('Subscription Controller', () => {
       emails: mockedSubscription.emails,
     };
     const spy = jest.spyOn(service, 'createSubscription');
+    jest.spyOn(service, 'checkOutdatedDependencies').mockResolvedValue();
 
     const { id } = await controller.createSubscription(dto);
 

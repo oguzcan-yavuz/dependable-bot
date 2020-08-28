@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { RemoteService } from './remote.service';
-import { remoteAdapterFactory } from './remote.provider';
+import { RemoteAdapterFactory } from './remote.provider';
 import { RegistryAdapterFactory } from './registry.provider';
 
 @Module({
-  providers: [remoteAdapterFactory, RegistryAdapterFactory, RemoteService],
-  exports: [remoteAdapterFactory, RemoteService],
+  providers: [RemoteAdapterFactory, RegistryAdapterFactory, RemoteService],
+  exports: [RemoteService],
 })
 export class RemoteModule {}

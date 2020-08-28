@@ -8,6 +8,9 @@ export class Subscription extends Document {
 
   @Prop()
   emails: string[];
+
+  @Prop()
+  remoteProvider: string;
 }
 
 export const SubscriptionSchema = SchemaFactory.createForClass(Subscription);

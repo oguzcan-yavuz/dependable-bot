@@ -1,21 +1,19 @@
-import { Injectable, Scope, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
-  RemoteAdapter,
   OutdatedDependency,
   DependencyManager,
   DependencyManagerAndPackageFile,
   Dependency,
+  RemoteProvider,
 } from './remote.types';
 import { RegistryAdapterFactory } from './registry.provider';
 import InvalidDependencyManagerException from './exceptions/invalid-dependency-manager.exception';
+import { RemoteAdapterFactory } from './remote.provider';
 
-@Injectable({
-  scope: Scope.REQUEST,
-})
+@Injectable()
 export class RemoteService {
   constructor(
-    @Inject('REMOTE_ADAPTER')
-    private remoteAdapter: RemoteAdapter,
+    private remoteAdapterFactory: RemoteAdapterFactory,
     private registryAdapterFactory: RegistryAdapterFactory,
   ) {}
 
@@ -90,8 +88,10 @@ export class RemoteService {
 
   async getOutdatedDependencies(
     repositoryUrl: string,
+    remoteProvider: RemoteProvider,
   ): Promise<OutdatedDependency[]> {
-    const fileNames = await this.remoteAdapter.getFileNames(repositoryUrl);
+    const remoteAdapter = this.remoteAdapterFactory.getAdapter(remoteProvider);
+    const fileNames = await remoteAdapter.getFileNames(repositoryUrl);
     const {
       packageFile,
       dependencyManager,
@@ -99,7 +99,7 @@ export class RemoteService {
     if (!packageFile || !dependencyManager) {
       throw new InvalidDependencyManagerException();
     }
-    const contents = await this.remoteAdapter.getFileContents(
+    const contents = await remoteAdapter.getFileContents(
       repositoryUrl,
       packageFile,
     );

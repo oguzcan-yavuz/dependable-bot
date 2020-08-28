@@ -5,8 +5,9 @@ import { SubscriptionEntity } from './subscription.types';
 import { RemoteService } from '../remote/remote.service';
 import { InjectEventEmitter } from 'nest-emitter';
 import { SubscriptionEventEmitter } from './subscription.events';
+import { OutdatedDependency, RemoteProvider } from '../remote/remote.types';
 import * as ms from 'ms';
-import { OutdatedDependency, Dependency } from '../remote/remote.types';
+import InvalidRemoteProviderException from './exceptions/invalid-remote-provider.exception';
 
 @Injectable()
 export class SubscriptionService implements OnModuleInit {
@@ -16,20 +17,35 @@ export class SubscriptionService implements OnModuleInit {
     @InjectEventEmitter() private readonly emitter: SubscriptionEventEmitter,
   ) {}
   onModuleInit() {
-    this.emitter.on('newSubscription', msg =>
-      this.checkOutdatedDependencies(msg),
-    );
     this.emitter.on('checkOutdatedDependencies', msg =>
       this.checkOutdatedDependencies(msg),
     );
   }
+
+  getRemoteProvider(repositoryUrl: string): RemoteProvider | undefined {
+    const hostnameToRemoteProviderMap = {
+      'github.com': RemoteProvider.Github,
+      '': RemoteProvider.Gitlab,
+    };
+    const { hostname } = new URL(repositoryUrl);
+
+    return hostnameToRemoteProviderMap[hostname];
+  }
+
   async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
   ): Promise<SubscriptionEntity> {
-    const subscription = await this.subscriptionRepository.create(
-      createSubscriptionDto,
+    const remoteProvider = this.getRemoteProvider(
+      createSubscriptionDto.repositoryUrl,
     );
-    this.emitter.emit('newSubscription', subscription._id);
+    if (!remoteProvider) {
+      throw new InvalidRemoteProviderException();
+    }
+    const subscription = await this.subscriptionRepository.create({
+      ...createSubscriptionDto,
+      remoteProvider,
+    });
+    this.checkOutdatedDependencies(subscription._id);
 
     return subscription;
   }
@@ -49,6 +65,7 @@ export class SubscriptionService implements OnModuleInit {
 
     const outdatedDependencies = await this.remoteService.getOutdatedDependencies(
       subscription.repositoryUrl,
+      subscription.remoteProvider,
     );
 
     return outdatedDependencies;
