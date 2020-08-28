@@ -6,7 +6,7 @@ import { RemoteService } from '../remote/remote.service';
 import { InjectEventEmitter } from 'nest-emitter';
 import { SubscriptionEventEmitter } from './subscription.events';
 import * as ms from 'ms';
-import { OutdatedDependency } from '../remote/remote.types';
+import { OutdatedDependency, Dependency } from '../remote/remote.types';
 
 @Injectable()
 export class SubscriptionService implements OnModuleInit {
@@ -61,14 +61,28 @@ export class SubscriptionService implements OnModuleInit {
       subscriptionId,
     );
     if (outdatedDependencies.length > 0) {
-      this.emitter.emit('newOutdatedDependencies', {
-        subscriptionId,
-        outdatedDependencies,
-      });
+      this.reportOutdatedDependencies(subscriptionId, outdatedDependencies);
     }
 
     setTimeout(() => {
       this.emitter.emit('checkOutdatedDependencies', subscriptionId);
     }, ms('1 day'));
+  }
+
+  async reportOutdatedDependencies(
+    subscriptionId: SubscriptionEntity['_id'],
+    outdatedDependencies: OutdatedDependency[],
+  ): Promise<void> {
+    const subscription = await this.getSubscription(subscriptionId);
+
+    outdatedDependencies.forEach(dependency => {
+      subscription.emails.forEach(email => {
+        const to = email;
+        const title = 'New outdated dependency!';
+        const message = `You can update ${dependency.name} from ${dependency.version} to ${dependency.latestVersion}`;
+
+        this.emitter.emit('newEmail', { to, title, message });
+      });
+    });
   }
 }

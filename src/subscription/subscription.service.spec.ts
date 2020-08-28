@@ -109,7 +109,7 @@ describe('SubscriptionService', () => {
     expect(listenerSpy).toHaveBeenCalledWith(subscription._id);
   });
 
-  it('should emit newOutdatedDependencies', async () => {
+  it('should check outdated dependencies', async () => {
     const outdatedDependencies: OutdatedDependency[] = [
       {
         name: 'dependency-one',
@@ -122,7 +122,10 @@ describe('SubscriptionService', () => {
         latestVersion: '9.9.9',
       },
     ];
-    const emitterSpy = jest.spyOn(eventEmitter, 'emit');
+    const reportOutdatedDependenciesSpy = jest.spyOn(
+      service,
+      'reportOutdatedDependencies',
+    );
     when(
       mockedRemoteService.getOutdatedDependencies(
         mockedSubscription.repositoryUrl,
@@ -136,9 +139,51 @@ describe('SubscriptionService', () => {
         mockedSubscription.repositoryUrl,
       ),
     ).times(1);
-    expect(emitterSpy).toHaveBeenCalledWith('newOutdatedDependencies', {
-      subscriptionId: mockedSubscription._id,
+    expect(reportOutdatedDependenciesSpy).toHaveBeenCalledWith(
+      mockedSubscription._id,
       outdatedDependencies,
+    );
+  });
+
+  it('should report outdated dependencies', async () => {
+    const outdatedDependencies: OutdatedDependency[] = [
+      {
+        name: 'dependency-one',
+        version: '1.2.3',
+        latestVersion: '9.9.9',
+      },
+      {
+        name: 'dependency-two',
+        version: '3.4.7',
+        latestVersion: '9.9.9',
+      },
+    ];
+    const emitterSpy = jest.spyOn(eventEmitter, 'emit');
+
+    await service.reportOutdatedDependencies(
+      mockedSubscription._id,
+      outdatedDependencies,
+    );
+
+    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+      to: mockedSubscription.emails[0],
+      title: 'New outdated dependency!',
+      message: `You can update ${outdatedDependencies[0].name} from ${outdatedDependencies[0].version} to ${outdatedDependencies[0].latestVersion}`,
+    });
+    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+      to: mockedSubscription.emails[1],
+      title: 'New outdated dependency!',
+      message: `You can update ${outdatedDependencies[0].name} from ${outdatedDependencies[0].version} to ${outdatedDependencies[0].latestVersion}`,
+    });
+    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+      to: mockedSubscription.emails[0],
+      title: 'New outdated dependency!',
+      message: `You can update ${outdatedDependencies[1].name} from ${outdatedDependencies[1].version} to ${outdatedDependencies[1].latestVersion}`,
+    });
+    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+      to: mockedSubscription.emails[1],
+      title: 'New outdated dependency!',
+      message: `You can update ${outdatedDependencies[1].name} from ${outdatedDependencies[1].version} to ${outdatedDependencies[1].latestVersion}`,
     });
   });
 });

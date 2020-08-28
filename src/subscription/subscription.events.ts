@@ -1,16 +1,11 @@
 import { EventEmitter } from 'events';
 import { StrictEventEmitter } from 'nest-emitter';
-import { OutdatedDependency } from '../remote/remote.types';
-
-export type OutdatedDependenciesOfSubscription = {
-  subscriptionId: string;
-  outdatedDependencies: OutdatedDependency[];
-};
+import { Email } from '../email/email.types';
 
 interface SubscriptionEvents {
   newSubscription: string;
   checkOutdatedDependencies: string;
-  newOutdatedDependencies: OutdatedDependenciesOfSubscription;
+  newEmail: Email;
 }
 
 export type SubscriptionEventEmitter = StrictEventEmitter<
