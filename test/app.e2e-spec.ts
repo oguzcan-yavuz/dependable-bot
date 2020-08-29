@@ -19,8 +19,14 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  afterEach(() => {
-    app.close();
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - invalid subscription id`, () => {
+    return request(app.getHttpServer())
+      .get(`/subscriptions/dummy-id/outdated-dependencies`)
+      .expect(400);
   });
 
   it('/subscriptions (POST) - invalid repositoryUrl', () => {
