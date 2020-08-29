@@ -11,11 +11,6 @@ export enum RemoteProvider {
   Gitlab = 'gitlab',
 }
 
-export type DependenciesAndDependencyManager = {
-  dependencies: Dependency[];
-  dependencyManager: DependencyManager;
-};
-
 export type Dependency = {
   name: string;
   version: string;

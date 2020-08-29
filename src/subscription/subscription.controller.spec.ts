@@ -80,7 +80,6 @@ describe('Subscription Controller', () => {
       emails: mockedSubscription.emails,
     };
     const createSubscriptionSpy = jest.spyOn(service, 'createSubscription');
-    jest.spyOn(service, 'checkOutdatedDependencies').mockResolvedValue();
 
     const { id } = await controller.createSubscription(dto);
 
