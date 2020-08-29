@@ -31,6 +31,7 @@
     "@nestjs/core": "^7.0.0",
     "@nestjs/mongoose": "^7.0.2",
     "@nestjs/platform-express": "^7.0.0",
+    "@nestjs/swagger": "^4.6.0",
     "@octokit/rest": "^18.0.3",
     "axios": "^0.20.0",
     "bull": "^3.18.0",
@@ -40,7 +41,8 @@
     "ms": "^2.1.2",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^6.5.4"
+    "rxjs": "^6.5.4",
+    "swagger-ui-express": "^4.1.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.0.0",

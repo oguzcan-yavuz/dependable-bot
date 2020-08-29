@@ -1,3 +1,12 @@
+### Running Locally
+
+```
+npm run docker:up
+npm run start
+```
+
+Swagger is at => [`http://localhost:3000/api`](http://localhost:3000/api)
+
 ### TODO:
 
 - Strict types on job payloads

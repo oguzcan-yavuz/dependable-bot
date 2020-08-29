@@ -1,5 +1,6 @@
 import { RemoteProvider } from '../remote/remote.types';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export type SubscriptionEntity = {
   _id: string;
@@ -21,3 +22,11 @@ export enum SubscriptionJobs {
 export type SubscriptionId = {
   subscriptionId: SubscriptionEntity['_id'];
 };
+
+export class Id {
+  @ApiProperty({
+    example: '507f1f77bcf86cd799439011',
+    description: 'Id of the subscription',
+  })
+  id: string;
+}
