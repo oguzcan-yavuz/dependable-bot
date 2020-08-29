@@ -11,3 +11,13 @@ export type SubscriptionEntity = {
 export type SubscriptionBody = CreateSubscriptionDto & {
   remoteProvider: RemoteProvider;
 };
+
+export const SubscriptionQueue = 'subscriptions';
+
+export enum SubscriptionJobs {
+  checkOutdatedDependencies = 'checkOutdatedDependencies',
+}
+
+export type SubscriptionId = {
+  subscriptionId: SubscriptionEntity['_id'];
+};

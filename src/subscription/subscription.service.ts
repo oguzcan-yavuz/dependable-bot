@@ -1,26 +1,31 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionRepository } from './subscription.repository';
-import { SubscriptionEntity } from './subscription.types';
+import {
+  SubscriptionEntity,
+  SubscriptionQueue,
+  SubscriptionJobs,
+  SubscriptionId,
+} from './subscription.types';
 import { RemoteService } from '../remote/remote.service';
-import { InjectEventEmitter } from 'nest-emitter';
-import { SubscriptionEventEmitter } from './subscription.events';
 import { OutdatedDependency, RemoteProvider } from '../remote/remote.types';
 import InvalidRemoteProviderException from './exceptions/invalid-remote-provider.exception';
 import * as ms from 'ms';
+import { InjectQueue, Processor, Process } from '@nestjs/bull';
+import { Queue, Job } from 'bull';
+import { EmailJobs, EmailQueue, EmailEntity } from '../email/email.types';
 
 @Injectable()
-export class SubscriptionService implements OnModuleInit {
+@Processor(SubscriptionQueue)
+export class SubscriptionService {
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly remoteService: RemoteService,
-    @InjectEventEmitter() private readonly emitter: SubscriptionEventEmitter,
+    @InjectQueue(SubscriptionQueue)
+    private readonly subscriptionQueue: Queue,
+    @InjectQueue(EmailQueue)
+    private readonly emailQueue: Queue,
   ) {}
-  onModuleInit() {
-    this.emitter.on('checkOutdatedDependencies', msg =>
-      this.checkOutdatedDependencies(msg),
-    );
-  }
 
   getRemoteProvider(repositoryUrl: string): RemoteProvider | undefined {
     const hostnameToRemoteProviderMap = {
@@ -45,7 +50,12 @@ export class SubscriptionService implements OnModuleInit {
       ...createSubscriptionDto,
       remoteProvider,
     });
-    this.checkOutdatedDependencies(subscription._id);
+    await this.subscriptionQueue.add(
+      SubscriptionJobs.checkOutdatedDependencies,
+      {
+        subscriptionId: subscription._id,
+      } as SubscriptionId,
+    );
 
     return subscription;
   }
@@ -71,9 +81,10 @@ export class SubscriptionService implements OnModuleInit {
     return outdatedDependencies;
   }
 
-  async checkOutdatedDependencies(
-    subscriptionId: SubscriptionEntity['_id'],
-  ): Promise<void> {
+  @Process(SubscriptionJobs.checkOutdatedDependencies)
+  async checkOutdatedDependencies({
+    data: { subscriptionId },
+  }: Job<SubscriptionId>): Promise<void> {
     const outdatedDependencies = await this.getOutdatedDependencies(
       subscriptionId,
     );
@@ -81,9 +92,13 @@ export class SubscriptionService implements OnModuleInit {
       this.reportOutdatedDependencies(subscriptionId, outdatedDependencies);
     }
 
-    setTimeout(() => {
-      this.emitter.emit('checkOutdatedDependencies', subscriptionId);
-    }, ms('1 day'));
+    await this.subscriptionQueue.add(
+      SubscriptionJobs.checkOutdatedDependencies,
+      {
+        subscriptionId,
+      } as SubscriptionId,
+      { delay: ms('1 day') },
+    );
   }
 
   async reportOutdatedDependencies(
@@ -98,7 +113,11 @@ export class SubscriptionService implements OnModuleInit {
         const title = 'New outdated dependency!';
         const message = `You can update ${dependency.name} from ${dependency.version} to ${dependency.latestVersion}`;
 
-        this.emitter.emit('newEmail', { to, title, message });
+        this.emailQueue.add(EmailJobs.sendEmail, {
+          to,
+          title,
+          message,
+        } as EmailEntity);
       });
     });
   }

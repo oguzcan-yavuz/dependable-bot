@@ -1,17 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { InjectEventEmitter } from 'nest-emitter';
-import { SubscriptionEventEmitter } from '../subscription/subscription.events';
-import { Email } from './email.types';
+import { Injectable } from '@nestjs/common';
+import { EmailEntity, EmailQueue, EmailJobs } from './email.types';
+import { Processor, Process } from '@nestjs/bull';
+import { Job } from 'bull';
 
 @Injectable()
-export class EmailService implements OnModuleInit {
-  constructor(
-    @InjectEventEmitter() private readonly emitter: SubscriptionEventEmitter,
-  ) {}
-  onModuleInit() {
-    this.emitter.on('newEmail', msg => this.sendEmail(msg));
-  }
-  sendEmail({ to, title, message }: Email): void {
+@Processor(EmailQueue)
+export class EmailService {
+  @Process(EmailJobs.sendEmail)
+  sendEmail({ data: { to, title, message } }: Job<EmailEntity>): void {
     console.log(
       `sending an email to: ${to} with title "${title}" and message: "${message}"`,
     );

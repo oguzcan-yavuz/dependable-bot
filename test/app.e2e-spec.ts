@@ -19,9 +19,11 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  afterEach(async () => {
-    await app.close();
-  });
+  // TODO: investigate configuration options
+  // redis connection is not handled properly so we get `Connection is closed` error when we try to close the app.
+  // afterEach(async () => {
+  //   await app.close();
+  // });
 
   it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - invalid subscription id`, () => {
     return request(app.getHttpServer())

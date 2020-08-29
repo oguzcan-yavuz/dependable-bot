@@ -6,12 +6,11 @@ import { getModelToken } from '@nestjs/mongoose';
 import { SubscriptionRepository } from './subscription.repository';
 import { RemoteService } from '../remote/remote.service';
 import { ContextIdFactory } from '@nestjs/core';
-import { NestEmitterModule } from 'nest-emitter';
-import { EventEmitter } from 'events';
-import { SubscriptionEntity } from './subscription.types';
+import { SubscriptionEntity, SubscriptionQueue } from './subscription.types';
 import { RegistryAdapterFactory } from '../remote/registry.provider';
 import { RemoteProvider } from '../remote/remote.types';
 import { RemoteAdapterFactory } from '../remote/remote.provider';
+import { EmailQueue } from '../email/email.types';
 
 describe('Subscription Controller', () => {
   let controller: SubscriptionController;
@@ -33,7 +32,6 @@ describe('Subscription Controller', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [NestEmitterModule.forRoot(new EventEmitter())],
       controllers: [SubscriptionController],
       providers: [
         SubscriptionService,
@@ -45,6 +43,14 @@ describe('Subscription Controller', () => {
         RemoteService,
         RemoteAdapterFactory,
         RegistryAdapterFactory,
+        {
+          provide: `BullQueue_${SubscriptionQueue}`,
+          useValue: { add: jest.fn() },
+        },
+        {
+          provide: `BullQueue_${EmailQueue}`,
+          useValue: { add: jest.fn() },
+        },
       ],
     })
       .overrideProvider(RemoteAdapterFactory)
@@ -73,12 +79,12 @@ describe('Subscription Controller', () => {
       repositoryUrl: mockedSubscription.repositoryUrl,
       emails: mockedSubscription.emails,
     };
-    const spy = jest.spyOn(service, 'createSubscription');
+    const createSubscriptionSpy = jest.spyOn(service, 'createSubscription');
     jest.spyOn(service, 'checkOutdatedDependencies').mockResolvedValue();
 
     const { id } = await controller.createSubscription(dto);
 
-    expect(spy).toHaveBeenCalledWith(dto);
+    expect(createSubscriptionSpy).toHaveBeenCalledWith(dto);
     expect(id).toBe(mockedSubscription._id);
   });
 });

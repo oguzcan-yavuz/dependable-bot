@@ -3,24 +3,29 @@ import { SubscriptionService } from './subscription.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { Subscription } from './schema/subscription.schema';
 import { SubscriptionRepository } from './subscription.repository';
-import { SubscriptionEntity } from './subscription.types';
+import {
+  SubscriptionEntity,
+  SubscriptionQueue,
+  SubscriptionJobs,
+} from './subscription.types';
 import { RemoteService } from '../remote/remote.service';
-import { SubscriptionEventEmitter } from './subscription.events';
-import { EventEmitter } from 'events';
-import { NestEmitterModule } from 'nest-emitter';
 import { RegistryAdapterFactory } from '../remote/registry.provider';
 import { mock, instance, when, anyString, reset, verify } from 'ts-mockito';
 import { OutdatedDependency, RemoteProvider } from '../remote/remote.types';
 import InvalidRemoteProviderException from './exceptions/invalid-remote-provider.exception';
 import { RemoteAdapterFactory } from '../remote/remote.provider';
+import { EmailQueue, EmailJobs } from '../email/email.types';
+import { Job } from 'bull';
+import * as ms from 'ms';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
   let repository: SubscriptionRepository;
   let mockedSubscriptionModel;
   let mockedSubscription: SubscriptionEntity;
-  let eventEmitter: SubscriptionEventEmitter;
   let mockedRemoteService: RemoteService;
+  let mockedSubscriptionQueue;
+  let mockedEmailQueue;
 
   beforeEach(async () => {
     mockedSubscription = {
@@ -36,13 +41,18 @@ describe('SubscriptionService', () => {
       })),
     };
     mockedRemoteService = mock(RemoteService);
+    mockedSubscriptionQueue = {
+      add: jest.fn().mockResolvedValue(null),
+    };
+    mockedEmailQueue = {
+      add: jest.fn().mockResolvedValue(null),
+    };
 
     when(
       mockedRemoteService.getOutdatedDependencies(anyString(), anyString()),
     ).thenResolve([]);
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [NestEmitterModule.forRoot(new EventEmitter())],
       providers: [
         SubscriptionService,
         SubscriptionRepository,
@@ -53,6 +63,14 @@ describe('SubscriptionService', () => {
         RemoteService,
         RemoteAdapterFactory,
         RegistryAdapterFactory,
+        {
+          provide: `BullQueue_${SubscriptionQueue}`,
+          useValue: mockedSubscriptionQueue,
+        },
+        {
+          provide: `BullQueue_${EmailQueue}`,
+          useValue: mockedEmailQueue,
+        },
       ],
     })
       .overrideProvider(RemoteService)
@@ -60,9 +78,7 @@ describe('SubscriptionService', () => {
       .compile();
 
     service = await module.resolve<SubscriptionService>(SubscriptionService);
-    service.onModuleInit();
     repository = module.get<SubscriptionRepository>(SubscriptionRepository);
-    eventEmitter = module.get<SubscriptionEventEmitter>('__event_emitter__');
   });
 
   afterEach(() => {
@@ -86,17 +102,19 @@ describe('SubscriptionService', () => {
       emails: mockedSubscription.emails,
     };
     const repositorySpy = jest.spyOn(repository, 'create');
-    const checkOutdatedDependenciesSpy = jest.spyOn(
-      service,
-      'checkOutdatedDependencies',
-    );
+    const subscriptionQueueSpy = jest.spyOn(mockedSubscriptionQueue, 'add');
     const subscription = await service.createSubscription(dto);
 
     expect(repositorySpy).toHaveBeenCalledWith({
       ...dto,
       remoteProvider: RemoteProvider.Github,
     });
-    expect(checkOutdatedDependenciesSpy).toHaveBeenCalledWith(subscription._id);
+    expect(subscriptionQueueSpy).toHaveBeenCalledWith(
+      SubscriptionJobs.checkOutdatedDependencies,
+      {
+        subscriptionId: subscription._id,
+      },
+    );
     expect(subscription).toEqual(mockedSubscription);
   });
 
@@ -129,9 +147,17 @@ describe('SubscriptionService', () => {
         RemoteProvider.Github,
       ),
     ).thenResolve(outdatedDependencies);
+    const subscriptionQueueSpy = jest.spyOn(mockedSubscriptionQueue, 'add');
 
-    await service.checkOutdatedDependencies(mockedSubscription._id);
+    await service.checkOutdatedDependencies({
+      data: { subscriptionId: mockedSubscription._id },
+    } as Job);
 
+    expect(subscriptionQueueSpy).toHaveBeenCalledWith(
+      SubscriptionJobs.checkOutdatedDependencies,
+      { subscriptionId: mockedSubscription._id },
+      { delay: ms('1 day') },
+    );
     verify(
       mockedRemoteService.getOutdatedDependencies(
         mockedSubscription.repositoryUrl,
@@ -157,29 +183,29 @@ describe('SubscriptionService', () => {
         latestVersion: '9.9.9',
       },
     ];
-    const emitterSpy = jest.spyOn(eventEmitter, 'emit');
+    const emailQueueSpy = jest.spyOn(mockedEmailQueue, 'add');
 
     await service.reportOutdatedDependencies(
       mockedSubscription._id,
       outdatedDependencies,
     );
 
-    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+    expect(emailQueueSpy).toHaveBeenCalledWith(EmailJobs.sendEmail, {
       to: mockedSubscription.emails[0],
       title: 'New outdated dependency!',
       message: `You can update ${outdatedDependencies[0].name} from ${outdatedDependencies[0].version} to ${outdatedDependencies[0].latestVersion}`,
     });
-    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+    expect(emailQueueSpy).toHaveBeenCalledWith(EmailJobs.sendEmail, {
       to: mockedSubscription.emails[1],
       title: 'New outdated dependency!',
       message: `You can update ${outdatedDependencies[0].name} from ${outdatedDependencies[0].version} to ${outdatedDependencies[0].latestVersion}`,
     });
-    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+    expect(emailQueueSpy).toHaveBeenCalledWith(EmailJobs.sendEmail, {
       to: mockedSubscription.emails[0],
       title: 'New outdated dependency!',
       message: `You can update ${outdatedDependencies[1].name} from ${outdatedDependencies[1].version} to ${outdatedDependencies[1].latestVersion}`,
     });
-    expect(emitterSpy).toHaveBeenCalledWith('newEmail', {
+    expect(emailQueueSpy).toHaveBeenCalledWith(EmailJobs.sendEmail, {
       to: mockedSubscription.emails[1],
       title: 'New outdated dependency!',
       message: `You can update ${outdatedDependencies[1].name} from ${outdatedDependencies[1].version} to ${outdatedDependencies[1].latestVersion}`,
