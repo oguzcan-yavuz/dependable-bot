@@ -97,7 +97,10 @@
     }
   },
   "lint-staged": {
-    "{src,apps,libs,test}/**/*.ts": "prettier --write"
+    "{src,apps,libs,test}/**/*.ts": [
+      "npm run lint",
+      "npm run prettier"
+    ]
   },
   "config": {
     "commitizen": {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { RemoteAdapter } from './remote-adapter.interface';
 
 export class GitlabAdapter implements RemoteAdapter {

@@ -10,12 +10,12 @@ export class GithubAdapter implements RemoteAdapter {
   ): { owner: string; repo: string } {
     const url = new URL(repositoryUrl);
     const path = url.pathname;
-    const [_, owner, repo] = path.split('/');
+    const [, owner, repo] = path.split('/');
 
     return { owner, repo };
   }
 
-  async getFileNames(repositoryUrl) {
+  async getFileNames(repositoryUrl: string): Promise<string[]> {
     const { owner, repo } = this.getOwnerAndRepo(repositoryUrl);
     const {
       data: {
@@ -37,7 +37,10 @@ export class GithubAdapter implements RemoteAdapter {
     return fileNames;
   }
 
-  async getFileContents(repositoryUrl, fileName) {
+  async getFileContents(
+    repositoryUrl: string,
+    fileName: string,
+  ): Promise<string> {
     const { owner, repo } = this.getOwnerAndRepo(repositoryUrl);
     const { data } = await octokit.repos.getContent({
       owner,

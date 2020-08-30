@@ -3,12 +3,12 @@ import { isValidObjectId } from 'mongoose';
 
 @Injectable()
 export class ParseObjectIdPipe implements PipeTransform {
-  transform(value: unknown) {
+  transform(value: unknown): string {
     const isValid = isValidObjectId(value);
     if (!isValid) {
       throw new BadRequestException('Invalid id');
     }
 
-    return value;
+    return value as string;
   }
 }

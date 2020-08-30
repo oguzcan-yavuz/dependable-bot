@@ -54,9 +54,9 @@ describe('Subscription Controller', () => {
       ],
     })
       .overrideProvider(RemoteAdapterFactory)
-      .useFactory({ factory: () => {} })
+      .useFactory({ factory: () => ({}) })
       .overrideProvider(RegistryAdapterFactory)
-      .useFactory({ factory: () => {} })
+      .useFactory({ factory: () => ({}) })
       .compile();
 
     const contextId = ContextIdFactory.create();
