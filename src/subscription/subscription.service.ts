@@ -112,18 +112,22 @@ export class SubscriptionService {
   ): Promise<void> {
     const subscription = await this.getSubscription(subscriptionId);
 
-    outdatedDependencies.forEach(dependency => {
-      subscription.emails.forEach(email => {
-        const to = email;
-        const title = 'New outdated dependency!';
-        const message = `You can update ${dependency.name} from ${dependency.version} to ${dependency.latestVersion}`;
+    Promise.all(
+      outdatedDependencies.map(dependency =>
+        Promise.all(
+          subscription.emails.map(email => {
+            const to = email;
+            const title = 'New outdated dependency!';
+            const message = `You can update ${dependency.name} from ${dependency.version} to ${dependency.latestVersion}`;
 
-        this.emailQueue.add(EmailJobs.sendEmail, {
-          to,
-          title,
-          message,
-        } as EmailEntity);
-      });
-    });
+            return this.emailQueue.add(EmailJobs.sendEmail, {
+              to,
+              title,
+              message,
+            } as EmailEntity);
+          }),
+        ),
+      ),
+    );
   }
 }
