@@ -8,7 +8,7 @@ import {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  catch(exception: HttpException | Error, host: ArgumentsHost): any {
+  catch(exception: HttpException | Error, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
