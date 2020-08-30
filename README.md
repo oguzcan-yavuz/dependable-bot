@@ -2,7 +2,7 @@
 
 ```
 npm run docker:up
-npm run start
+npm run start:dev
 ```
 
 Swagger is at => [`http://localhost:3000/api`](http://localhost:3000/api)

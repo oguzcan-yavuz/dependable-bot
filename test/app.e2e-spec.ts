@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { OutdatedDependency } from '../src/remote/remote.types';
 import { AllExceptionsFilter } from '../src/all-exceptions.filter';
+import { Logger } from 'nestjs-pino';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -15,7 +16,8 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
-    app.useGlobalFilters(new AllExceptionsFilter());
+    app.useGlobalFilters(new AllExceptionsFilter(app.get(Logger)));
+    app.useLogger(app.get(Logger));
     await app.init();
   });
 
