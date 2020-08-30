@@ -131,4 +131,37 @@ describe('AppController (e2e)', () => {
       });
     });
   });
+
+  describe('Gitlab repositories', () => {
+    describe('npmOrYarn', () => {
+      let subscriptionId: string;
+
+      it('/subscriptions (POST) - success', () => {
+        return request(app.getHttpServer())
+          .post('/subscriptions')
+          .send({
+            repositoryUrl: 'https://gitlab.com/watched/tensorflow/tensorflow',
+            emails: ['oguzcanyavuz321@gmail.com', 'random@example.com'],
+          })
+          .expect(201)
+          .then(response => {
+            expect(response.body).toHaveProperty('id');
+            subscriptionId = response.body.id;
+          });
+      });
+
+      it(`/subscriptions/:subscriptionId/outdated-dependencies (GET) - success`, () => {
+        return request(app.getHttpServer())
+          .get(`/subscriptions/${subscriptionId}/outdated-dependencies`)
+          .expect(500)
+          .then(response => {
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Method not implemented.',
+              }),
+            );
+          });
+      });
+    });
+  });
 });
