@@ -24,11 +24,10 @@ export class RemoteService {
       'package.json': DependencyManager.NpmOrYarn,
       'composer.json': DependencyManager.Composer,
     };
-
-    const [packageFile, dependencyManager] =
-      Object.entries(packageFileToDependencyManagerMap).find(([packageFile]) =>
-        fileNames.includes(packageFile),
-      ) || [];
+    const packageFile = fileNames.find(
+      fileName => packageFileToDependencyManagerMap[fileName],
+    );
+    const dependencyManager = packageFileToDependencyManagerMap[packageFile];
 
     return { packageFile, dependencyManager };
   }

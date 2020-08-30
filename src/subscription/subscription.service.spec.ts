@@ -119,8 +119,11 @@ describe('SubscriptionService', () => {
   });
 
   it('should get subscription', async () => {
+    const repositorySpy = jest.spyOn(repository, 'getById');
+
     const subscription = await service.getSubscription(mockedSubscription._id);
 
+    expect(repositorySpy).toHaveBeenCalledWith(mockedSubscription._id);
     expect(subscription).toEqual(mockedSubscription);
   });
 
