@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionRepository } from './subscription.repository';
 import {
@@ -60,18 +60,23 @@ export class SubscriptionService {
     return subscription;
   }
 
-  getSubscription(
+  async getSubscription(
     subscriptionId: SubscriptionEntity['_id'],
   ): Promise<SubscriptionEntity> {
-    return this.subscriptionRepository.getById(subscriptionId);
+    const subscription = await this.subscriptionRepository.getById(
+      subscriptionId,
+    );
+    if (!subscription) {
+      throw new NotFoundException();
+    }
+
+    return subscription;
   }
 
   async getOutdatedDependencies(
     subscriptionId: string,
   ): Promise<OutdatedDependency[]> {
-    const subscription = await this.subscriptionRepository.getById(
-      subscriptionId,
-    );
+    const subscription = await this.getSubscription(subscriptionId);
 
     const outdatedDependencies = await this.remoteService.getOutdatedDependencies(
       subscription.repositoryUrl,

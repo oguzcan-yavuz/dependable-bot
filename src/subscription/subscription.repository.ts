@@ -21,7 +21,7 @@ export class SubscriptionRepository {
 
   async getById(
     subscriptionId: SubscriptionEntity['_id'],
-  ): Promise<SubscriptionEntity> {
+  ): Promise<SubscriptionEntity | undefined> {
     const subscription = await this.subscriptionModel
       .findById(subscriptionId)
       .lean<SubscriptionEntity>();

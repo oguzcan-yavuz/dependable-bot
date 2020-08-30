@@ -17,6 +17,7 @@ import { RemoteAdapterFactory } from '../remote/remote.provider';
 import { EmailQueue, EmailJobs } from '../email/email.types';
 import { Job } from 'bull';
 import * as ms from 'ms';
+import { NotFoundException } from '@nestjs/common';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
@@ -116,6 +117,17 @@ describe('SubscriptionService', () => {
       },
     );
     expect(subscription).toEqual(mockedSubscription);
+  });
+
+  it('should throw NotFoundException', async () => {
+    const repositorySpy = jest
+      .spyOn(repository, 'getById')
+      .mockResolvedValue(undefined);
+
+    expect(
+      async () => await service.getSubscription(mockedSubscription._id),
+    ).rejects.toThrow(NotFoundException);
+    expect(repositorySpy).toHaveBeenCalledWith(mockedSubscription._id);
   });
 
   it('should get subscription', async () => {
